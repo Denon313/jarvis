@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>جارویس</title>
+<style>
+  body{margin:0;font-family:Tahoma,sans-serif;background:#0f1220;color:#e8ecff;display:flex;flex-direction:column;height:100vh}
+  h1{margin:0;padding:14px;text-align:center;font-size:20px;background:#171b30}
+  #log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+  .m{max-width:85%;padding:10px 14px;border-radius:14px;line-height:1.7}
+  .me{align-self:flex-start;background:#2b3358}
+  .ai{align-self:flex-end;background:#1d6b5a}
+  #bar{display:flex;gap:8px;padding:12px;background:#171b30}
+  #txt{flex:1;padding:10px;border-radius:10px;border:0;background:#2b3358;color:#fff;font-size:16px}
+  button{border:0;border-radius:10px;padding:10px 16px;font-size:16px;cursor:pointer}
+  #keybar{display:none;padding:8px 12px;background:#222845;gap:8px}
+  #keybar.show{display:flex}
+  #mic{background:#e0475b;color:#fff}
+  #mic.on{background:#3ddc97;color:#000}
+  #send{background:#4c6fff;color:#fff}
+</style>
+</head>
+<body>
+<h1>🤖 جارویس (Groq)</h1>
+<div id="keybar">
+  <input id="key" type="password" placeholder="کلید Groq (gsk_...)" style="flex:1;padding:8px;border-radius:8px;border:0;background:#2b3358;color:#fff">
+  <button id="savekey" style="background:#3ddc97;color:#000">ذخیره</button>
+</div>
+<div id="log"></div>
+<div id="bar">
+  <button id="keybtn" style="background:#2b3358;color:#fff">🔑</button>
+  <button id="mic">🎤</button>
+  <input id="txt" placeholder="یا اینجا تایپ کن…">
+  <button id="send">ارسال</button>
+</div>
+
+<script>
+const log = document.getElementById('log');
+const txt = document.getElementById('txt');
+const micBtn = document.getElementById('mic');
+
+function add(cls, t){ const d=document.createElement('div'); d.className='m '+cls; d.textContent=t; log.appendChild(d); log.scrollTop=log.scrollHeight; }
+function say(t){
+  add('ai', t);
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='fa-IR'; speechSynthesis.speak(u);}catch(e){}
+}
+
+/* ---------- نرمال‌سازی و فاصله‌ی ویرایشی ---------- */
+function norm(s){
+  return s.toLowerCase()
+    .replace(/ي/g,'ی').replace(/ك/g,'ک')
+    .replace(/[\u064B-\u065F\u200c]/g,' ')
+    .replace(/[؟?!.,،]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+function lev(a,b){
+  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,i)=>i);
+  for(let i=1;i<=m;i++){
+    const cur=[i];
+    for(let j=1;j<=n;j++){
+      cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+    prev=cur;
+  }
+  return prev[n];
+}
+function sim(a,b){ const L=Math.max(a.length,b.length); return L? 1-lev(a,b)/L : 1; }
+function hasTok(tokens, word, th=0.7){ return tokens.some(t=>sim(t,word)>=th); }
+
+/* ---------- دستورهای ساده (کل جمله) ---------- */
+const SIMPLE = {
+  greet:{label:'سلام', phrases:['سلام','درود','سلام جارویس']},
+  dollar:{label:'دلار', phrases:['دلار','قیمت دلار']},
+  date:{label:'تاریخ امروز', phrases:['امروز چندمه','امروز چندم','تاریخ امروز','امروز چندم ماهه']},
+  time:{label:'ساعت', phrases:['ساعت چنده','ساعت','الان ساعت چنده']}
+};
+
+/* ---------- اپ‌ها (در نسخه‌ی وب فقط سایت‌شون باز میشه) ---------- */
+const APPS = {
+  'اینستاگرام':'https://instagram.com','واتساپ':'https://web.whatsapp.com','تلگرام':'https://web.telegram.org',
+  'یوتیوب':'https://youtube.com','گوگل':'https://google.com','نقشه':'https://maps.google.com',
+  'آپارات':'https://aparat.com','دیوار':'https://divar.ir','توییتر':'https://x.com','گیت هاب':'https://github.com'
+};
+const CITIES = {'تهران':'Tehran','مشهد':'Mashhad','اصفهان':'Isfahan','شیراز':'Shiraz','تبریز':'Tabriz','کرج':'Karaj','اهواز':'Ahvaz','قم':'Qom','رشت':'Rasht'};
+const FILLER = ['رو','را','لطفا','جارویس','برام','ی','یه','یک','کن','بزن','باز','زنگ','سرچ','جستجو','به','برای','از'];
+
+function digits(s){ return s.replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)); }
+
+/* ---------- اجرای دستورها ---------- */
+const ACTIONS = {
+  greet(){ say('سلام! چی کار می‌تونم برات بکنم؟'); },
+  dollar(){ search('قیمت دلار امروز'); },
+  date(){
+    const d=new Date();
+    say('امروز '+d.toLocaleDateString('fa-IR-u-ca-persian',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' است. تاریخ میلادی: '+d.toLocaleDateString('en-GB'));
+  },
+  time(){ say('ساعت '+new Date().toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})+' است.'); }
+};
+
+async function weather(city){
+  say('یه لحظه، دارم آب‌وهوا رو می‌گیرم…');
+  try{
+    const en = CITIES[city] || city || '';
+    const r = await fetch('https://wttr.in/'+encodeURIComponent(en)+'?format=j1&lang=fa');
+    const j = await r.json();
+    const c = j.current_condition[0];
+    const desc = (c.lang_fa&&c.lang_fa[0]&&c.lang_fa[0].value) || c.weatherDesc[0].value;
+    say((city?city+': ':'')+'دما '+c.temp_C+' درجه، احساس‌شده '+c.FeelsLikeC+' درجه، '+desc+'، رطوبت '+c.humidity+' درصد.');
+  }catch(e){ say('نتونستم آب‌وهوا رو بگیرم. اینترنت رو چک کن.'); }
+}
+
+async function search(q){
+  say('دارم دنبال «'+q+'» می‌گردم…');
+  try{
+    const u='https://fa.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(q)+
+      '&gsrlimit=1&prop=extracts&exintro=1&explaintext=1&exsentences=3&format=json&origin=*';
+    const j=await (await fetch(u)).json();
+    const p=j.query && Object.values(j.query.pages)[0];
+    if(p && p.extract){ say(p.extract); return; }
+  }catch(e){}
+  window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');
+  say('جواب مستقیم پیدا نکردم، نتیجه‌ی گوگل رو برات باز کردم.');
+}
+
+function openApp(name){
+  let best=null,bs=0;
+  for(const k in APPS){ const s=sim(name,k); if(s>bs){bs=s;best=k;} }
+  if(best && bs>=0.7){ window.open(APPS[best],'_blank'); say(best+' رو باز کردم.'); }
+  else if(name){ say('اپ «'+name+'» رو بلد نیستم. سرچش کنم؟ بگو «سرچ کن '+name+'»'); }
+  else say('چی رو باز کنم؟');
+}
+
+function callTo(name){
+  const num=digits(name).replace(/\D/g,'');
+  if(num.length>=3){ location.href='tel:'+num; say('دارم به '+num+' زنگ می‌زنم.'); }
+  else say('تو نسخه‌ی وب به مخاطب‌ها دسترسی ندارم. شماره رو بگو. تو نسخه‌ی اندروید با اسم هم زنگ می‌زنم.');
+}
+
+function lastMsg(){
+  say('خوندن پیام‌ها فقط تو نسخه‌ی اندروید ممکنه. تو مرورگر به نوتیفیکیشن‌ها دسترسی ندارم.');
+}
+
+/* ---------- مغز تشخیص منظور ---------- */
+let pending=null;
+
+function localHandle(raw){
+  let t=norm(raw);
+  let tokens=t.split(' ').filter(Boolean);
+  if(tokens.length && sim(tokens[0],'جارویس')>=0.7){ tokens.shift(); t=tokens.join(' '); }
+
+  // پاسخ به سؤال «منظورت X بود یا Y؟»
+  if(pending){
+    const opts=pending; pending=null;
+    let best=null,bs=0;
+    for(const o of opts){ for(const p of SIMPLE[o].phrases){ const s=sim(t,norm(p)); if(s>bs){bs=s;best=o;} } }
+    if(bs>=0.6){ ACTIONS[best](); return; }
+    say('ببخشید، باز هم نفهمیدم. می‌شه دوباره بگی؟');
+    return;
+  }
+
+  // دستورهای دارای پارامتر
+  const rest=()=>tokens.filter(w=>!FILLER.some(f=>sim(w,f)>=0.85)).join(' ');
+  if(hasTok(tokens,'هوا') || hasTok(tokens,'آبوهوا') || (hasTok(tokens,'آب')&&hasTok(tokens,'هوا')))
+    return weather(tokens.filter(w=>!['آب','و','هوا','چطوره','چطور','است','آبوهوا','چطوری','هواشناسی','وضعیت'].includes(w)&&!FILLER.includes(w)).join(' '));
+  if(hasTok(tokens,'پیام')) return lastMsg();
+  if(hasTok(tokens,'سرچ')||hasTok(tokens,'جستجو')) return search(rest());
+  if(hasTok(tokens,'زنگ')&&hasTok(tokens,'بزن')) return callTo(rest());
+  if(hasTok(tokens,'باز')&&hasTok(tokens,'کن')) return openApp(rest());
+
+  // دستورهای ساده با فاصله‌ی ویرایشی
+  const scores=Object.keys(SIMPLE).map(k=>({k,s:Math.max(...SIMPLE[k].phrases.map(p=>sim(t,norm(p))))})).sort((a,b)=>b.s-a.s);
+  const [a,b]=scores;
+  if(a.s>=0.85 && a.s-b.s>=0.15) return ACTIONS[a.k]();
+  if(a.s>=0.5){
+    if(a.s-b.s<0.15 && b.s>=0.5){
+      pending=[a.k,b.k];
+      return say('ببخشید، منظورت '+SIMPLE[a.k].label+' بود یا '+SIMPLE[b.k].label+'؟');
+    }
+    if(a.s>=0.7) return ACTIONS[a.k]();
+    pending=[a.k,b.k];
+    return say('ببخشید، منظورت '+SIMPLE[a.k].label+' بود یا '+SIMPLE[b.k].label+'؟');
+  }
+  say('ببخشید، منظورت رو نفهمیدم.');
+}
+
+/* ---------- Groq ---------- */
+const LABEL={greet:'سلام',dollar:'دلار',date:'تاریخ امروز',time:'ساعت',weather:'آب‌وهوا',search:'سرچ'};
+let askedOptions=null;
+
+function getKey(){ try{return localStorage.getItem('groqkey')||'';}catch(e){return '';} }
+
+async function whisper(blob){
+  const fd=new FormData();
+  fd.append('file',blob,'voice.webm');
+  fd.append('model','whisper-large-v3');
+  fd.append('language','fa');
+  fd.append('temperature','0');
+  const r=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{Authorization:'Bearer '+getKey()},body:fd});
+  if(!r.ok) throw new Error('whisper '+r.status);
+  return (await r.json()).text.trim();
+}
+
+const SYS=`You are the intent parser of a Persian voice assistant. The text comes from speech recognition and may contain misheard words (for example "دلام" could be "سلام" or "دلار").
+Reply with JSON only: {"intent":"...","param":"...","options":[]}
+intent is one of: greet, dollar, date, time, weather, search, open_app, call, last_message, ambiguous, chat, unknown.
+- greet: a greeting (سلام). dollar: asks the dollar price. date: today's date. time: current time.
+- weather: param = city name in Persian or "" if none. search: param = the thing to look up.
+- open_app: param = app name in Persian. call: param = phone number or contact name. last_message: param = sender name (e.g. Bro).
+- If the text is close to two different commands and you cannot decide, intent="ambiguous" and options = the two intent codes (from greet, dollar, date, time).
+- If "pending_question_options" is given, the user is answering the question "did you mean X or Y?". Pick the matching intent from those options; if the answer is unclear, intent="unknown".
+- chat: anything else: small talk, greetings like درود or چخبر, questions, advice, explanations, jokes, any normal conversation with an AI assistant.
+- unknown only if the text is meaningless noise.`;
+
+async function llm(text){
+  const body={model:'llama-3.3-70b-versatile',temperature:0,response_format:{type:'json_object'},
+    messages:[{role:'system',content:SYS},{role:'user',content:JSON.stringify({text,pending_question_options:askedOptions})}]};
+  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
+    headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error('llm '+r.status);
+  const j=await r.json();
+  return JSON.parse(j.choices[0].message.content);
+}
+
+const history=[];
+async function chat(text){
+  history.push({role:'user',content:text});
+  const body={model:'llama-3.3-70b-versatile',temperature:0.7,max_tokens:400,
+    messages:[{role:'system',content:'You are Jarvis, a friendly smart voice assistant like ChatGPT or Claude. Always answer in natural spoken Persian, short and clear (1 to 4 sentences unless the user asks for more). No markdown, no emoji, no lists.'},...history.slice(-12)]};
+  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
+    headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error('chat '+r.status);
+  const reply=(await r.json()).choices[0].message.content.trim();
+  history.push({role:'assistant',content:reply});
+  say(reply);
+}
+
+async function handle(raw){
+  add('me', raw);
+  if(!getKey()) return localHandle(raw);
+  try{
+    const res=await llm(raw);
+    askedOptions=null;
+    const p=(res.param||'').trim();
+    switch(res.intent){
+      case 'greet': case 'dollar': case 'date': case 'time': return ACTIONS[res.intent]();
+      case 'weather': return weather(p);
+      case 'search': return search(p||raw);
+      case 'open_app': return openApp(p);
+      case 'call': return callTo(p);
+      case 'last_message': return lastMsg();
+      case 'ambiguous':{
+        const o=(res.options||[]).filter(x=>LABEL[x]).slice(0,2);
+        if(o.length===2){ askedOptions=o; return say('ببخشید، منظورت '+LABEL[o[0]]+' بود یا '+LABEL[o[1]]+'؟'); }
+        return say('ببخشید، منظورت رو نفهمیدم.');
+      }
+      case 'chat': return chat(raw);
+      default: return say('ببخشید، منظورت رو نفهمیدم.');
+    }
+  }catch(e){
+    say('به Groq وصل نشدم ('+e.message+'). با روش آفلاین جواب می‌دم.');
+    localHandle(raw);
+  }
+}
+
+/* ---------- ورودی صدا و متن ---------- */
+const keybar=document.getElementById('keybar');
+const keyInput=document.getElementById('key');
+document.getElementById('keybtn').onclick=()=>keybar.classList.toggle('show');
+document.getElementById('savekey').onclick=()=>{
+  const v=keyInput.value.trim();
+  if(v){ try{localStorage.setItem('groqkey',v);}catch(e){} keyInput.value=''; keybar.classList.remove('show'); say('کلید ذخیره شد.'); }
+};
+if(!getKey()) keybar.classList.add('show');
+
+let mr=null,chunks=[],recording=false;
+micBtn.onclick=async()=>{
+  if(!getKey()){ keybar.classList.add('show'); return say('اول کلید Groq رو وارد کن.'); }
+  if(recording){ mr.stop(); return; }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    mr=new MediaRecorder(stream); chunks=[];
+    mr.ondataavailable=e=>chunks.push(e.data);
+    mr.onstop=async()=>{
+      recording=false; micBtn.classList.remove('on');
+      stream.getTracks().forEach(t=>t.stop());
+      try{
+        const text=await whisper(new Blob(chunks,{type:mr.mimeType}));
+        if(text) handle(text); else say('چیزی نشنیدم.');
+      }catch(e){ say('تشخیص صدا کار نکرد ('+e.message+').'); }
+    };
+    mr.start(); recording=true; micBtn.classList.add('on');
+  }catch(e){ say('به میکروفون دسترسی نداشتم. می‌تونی تایپ کنی.'); }
+};
+function sendTxt(){ const v=txt.value.trim(); if(v){ txt.value=''; handle(v);} }
+document.getElementById('send').onclick=sendTxt;
+txt.addEventListener('keydown',e=>{ if(e.key==='Enter') sendTxt(); });
+
+add('ai','سلام، من جارویسم. دکمه‌ی 🎤 رو بزن، حرف بزن و دوباره بزن تا تموم بشه.');
+</script>
+</body>
+</html>
+
