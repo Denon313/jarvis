@@ -188,6 +188,7 @@ function localHandle(raw){
 /* ---------- Groq ---------- */
 const LABEL={greet:'سلام',dollar:'دلار',date:'تاریخ امروز',time:'ساعت',weather:'آب‌وهوا',search:'سرچ'};
 let askedOptions=null;
+const MODEL='openai/gpt-oss-120b';
 
 function getKey(){ try{return localStorage.getItem('groqkey')||'';}catch(e){return '';} }
 
@@ -214,7 +215,7 @@ intent is one of: greet, dollar, date, time, weather, search, open_app, call, la
 - unknown only if the text is meaningless noise.`;
 
 async function llm(text){
-  const body={model:'llama-3.3-70b-versatile',temperature:0,response_format:{type:'json_object'},
+  const body={model:MODEL,reasoning_effort:'low',temperature:0,response_format:{type:'json_object'},
     messages:[{role:'system',content:SYS},{role:'user',content:JSON.stringify({text,pending_question_options:askedOptions})}]};
   const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
     headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify(body)});
@@ -226,7 +227,7 @@ async function llm(text){
 const history=[];
 async function chat(text){
   history.push({role:'user',content:text});
-  const body={model:'llama-3.3-70b-versatile',temperature:0.7,max_tokens:400,
+  const body={model:MODEL,reasoning_effort:'low',temperature:0.7,max_completion_tokens:1200,
     messages:[{role:'system',content:'You are Jarvis, a friendly smart voice assistant like ChatGPT or Claude. Always answer in natural spoken Persian, short and clear (1 to 4 sentences unless the user asks for more). No markdown, no emoji, no lists.'},...history.slice(-12)]};
   const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
     headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify(body)});
