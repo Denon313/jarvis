@@ -71,41 +71,82 @@
 const SHOW_KEY_BUTTON=true;
 const GROQ_KEY=''; // اختیاری: کلید داخل کد (پیشنهاد نمیشه)
 const MODEL='openai/gpt-oss-120b';
+const SEARCH_MODEL='groq/compound-mini';
 function getKey(){ let k=''; try{ k=localStorage.getItem('groqkey')||''; }catch(e){} k=k||GROQ_KEY; return k.startsWith('gsk_')?k:''; }
 
 const log=document.getElementById('log');
 const txt=document.getElementById('txt');
 const orb=document.getElementById('orb');
+const sendBtn=document.getElementById('send');
 const stateEl=document.getElementById('state');
+const ICON_SEND='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform:scaleX(-1)"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+const ICON_STOP='<svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2.5"/></svg>';
 
-function scroll(){ log.scrollTop=log.scrollHeight; }
-function add(cls,t){ const d=document.createElement('div'); d.className='m '+cls; d.textContent=t; log.appendChild(d); scroll(); }
+function scrollDown(){ log.scrollTop=log.scrollHeight; }
+function add(cls,t){ const d=document.createElement('div'); d.className='m '+cls; d.textContent=t; log.appendChild(d); scrollDown(); }
 function setState(kind,label){ orb.className=kind||''; stateEl.textContent=label||''; }
+
+/* ---------- لغو (مثل کلود) ---------- */
+let ctrl=null, running=false;
+function chk(){ if(ctrl&&ctrl.signal.aborted) throw new DOMException('stopped','AbortError'); }
+function setRunning(b){ running=b; sendBtn.innerHTML=b?ICON_STOP:ICON_SEND; sendBtn.title=b?'توقف':'ارسال'; }
+function stopAll(){
+  if(!running) return;
+  try{ ctrl.abort(); }catch(e){}
+  stopSpeech();
+  for(const s of [...active]) s.fail('متوقف شد');
+}
+async function run(fn){
+  if(running) return;
+  ctrl=new AbortController(); setRunning(true);
+  try{ await fn(); await waitSpeech(); }
+  catch(e){ if(e.name!=='AbortError') console.error(e); }
+  finally{ setRunning(false); }
+}
 
 /* ---------- صدا ---------- */
 let speaking=0;
 function speak(t){
-  try{
-    const u=new SpeechSynthesisUtterance(t); u.lang='fa-IR';
-    speaking++; let done=false;
-    const fin=()=>{ if(!done){done=true; speaking=Math.max(0,speaking-1);} };
-    u.onend=fin; u.onerror=fin; setTimeout(fin,20000);
-    speechSynthesis.speak(u);
-  }catch(e){}
+  const parts=[]; let cur='';
+  for(const s of t.split(/(?<=[.!؟?\n])\s*/)){
+    if(!s) continue;
+    if(cur && (cur+s).length>170){ parts.push(cur); cur=s; } else cur+=(cur?' ':'')+s;
+  }
+  if(cur) parts.push(cur);
+  for(const p of parts){
+    try{
+      const u=new SpeechSynthesisUtterance(p); u.lang='fa-IR';
+      speaking++; let done=false;
+      const fin=()=>{ if(!done){done=true; speaking=Math.max(0,speaking-1);} };
+      u.onend=fin; u.onerror=fin; setTimeout(fin,25000);
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
 }
+function stopSpeech(){ try{ speechSynthesis.cancel(); }catch(e){} speaking=0; }
 function say(t){ add('ai',t); speak(t); }
 function waitSpeech(){ return new Promise(r=>{ const iv=setInterval(()=>{ if(speaking===0){clearInterval(iv);r();} },150); }); }
+function clean(t){
+  return t.replace(/【[^】]*】/g,'').replace(/\[\d+\]/g,'').replace(/\[([^\]]*)\]\([^)]*\)/g,'$1')
+    .replace(/[*`#>]+/g,'').replace(/^\s*[-•]\s+/gm,'').replace(/\n{3,}/g,'\n\n').trim();
+}
 
 /* ---------- مرحله‌های وضعیت (مثل کلود/چت‌جی‌پی‌تی) ---------- */
+const active=new Set();
 function startStep(text){
   const d=document.createElement('div');
   d.className='step run'; d.innerHTML='<span class="ic"><span class="dot"></span></span><span class="t"></span>';
-  d.querySelector('.t').textContent=text; log.appendChild(d); scroll();
+  d.querySelector('.t').textContent=text; log.appendChild(d); scrollDown();
   const CHECK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
   const CROSS='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-  const fin=(cls,icon,t)=>{ if(!d.isConnected) return; d.className='step '+cls; d.querySelector('.ic').innerHTML=icon; if(t) d.querySelector('.t').textContent=t; };
-  return { set:t=>{ if(d.isConnected) d.querySelector('.t').textContent=t; },
-           done:t=>fin('ok',CHECK,t), fail:t=>fin('fail',CROSS,t), remove:()=>d.remove() };
+  const api={};
+  const fin=(cls,icon,t)=>{ active.delete(api); if(!d.isConnected) return; d.className='step '+cls; d.querySelector('.ic').innerHTML=icon; if(t) d.querySelector('.t').textContent=t; };
+  api.set=t=>{ if(d.isConnected) d.querySelector('.t').textContent=t; };
+  api.done=t=>fin('ok',CHECK,t);
+  api.fail=t=>fin('fail',CROSS,t);
+  api.remove=()=>{ active.delete(api); d.remove(); };
+  active.add(api);
+  return api;
 }
 
 /* ---------- نرمال‌سازی و فاصله‌ی ویرایشی ---------- */
@@ -138,22 +179,41 @@ const SIMPLE = {
   date:{label:'تاریخ امروز', phrases:['امروز چندمه','امروز چندم','تاریخ امروز','امروز چندم ماهه']},
   time:{label:'ساعت', phrases:['ساعت چنده','ساعت','الان ساعت چنده']}
 };
+function fastLocal(raw){
+  const tk=norm(raw).split(' ').filter(Boolean);
+  if(tk.length&&isWakeTok(tk[0])) tk.shift();
+  const t=tk.join(' ');
+  for(const k in SIMPLE) if(SIMPLE[k].phrases.some(p=>norm(p)===t)) return k;
+  return null;
+}
 
-/* ---------- اپ‌ها (در نسخه‌ی وب فقط سایت‌شون باز میشه) ---------- */
-const APPS = {
-  'اینستاگرام':'https://instagram.com','واتساپ':'https://web.whatsapp.com','تلگرام':'https://web.telegram.org',
-  'یوتیوب':'https://youtube.com','گوگل':'https://google.com','نقشه':'https://maps.google.com',
-  'آپارات':'https://aparat.com','دیوار':'https://divar.ir','توییتر':'https://x.com','گیت هاب':'https://github.com'
-};
+/* ---------- اپ‌ها: روی اندروید خود اپ باز میشه، جای دیگه سایتش ---------- */
+const APPS = [
+  {names:['اینستاگرام','اینستا','instagram'],pkg:'com.instagram.android',web:'https://instagram.com'},
+  {names:['تلگرام','تلگرم','telegram'],pkg:'org.telegram.messenger',web:'https://web.telegram.org'},
+  {names:['واتساپ','واتس اپ','واتس آپ','whatsapp'],pkg:'com.whatsapp',web:'https://web.whatsapp.com'},
+  {names:['یوتیوب','یوتوب','youtube'],pkg:'com.google.android.youtube',web:'https://youtube.com'},
+  {names:['گوگل','google'],pkg:'com.google.android.googlequicksearchbox',web:'https://google.com'},
+  {names:['نقشه','گوگل مپ','مپ','نقشه گوگل'],pkg:'com.google.android.apps.maps',web:'https://maps.google.com'},
+  {names:['کروم','chrome'],pkg:'com.android.chrome',web:'https://google.com'},
+  {names:['جیمیل','gmail'],pkg:'com.google.android.gm',web:'https://mail.google.com'},
+  {names:['توییتر','ایکس','تویتر','twitter'],pkg:'com.twitter.android',web:'https://x.com'},
+  {names:['گیت هاب','گیتهاب','github'],pkg:'com.github.android',web:'https://github.com'},
+  {names:['دیوار'],pkg:'ir.divar',web:'https://divar.ir'},
+  {names:['دیجی کالا','دیجیکالا'],pkg:'com.digikala',web:'https://digikala.com'},
+  {names:['اسنپ','snapp'],pkg:'cab.snapp.passenger',web:'https://app.snapp.taxi'},
+  {names:['آپارات','اپارات'],pkg:'',web:'https://aparat.com'}
+];
 const CITIES = {'تهران':'Tehran','مشهد':'Mashhad','اصفهان':'Isfahan','شیراز':'Shiraz','تبریز':'Tabriz','کرج':'Karaj','اهواز':'Ahvaz','قم':'Qom','رشت':'Rasht'};
-const FILLER = ['رو','را','لطفا','جارویس','برام','ی','یه','یک','کن','بزن','باز','زنگ','سرچ','جستجو','به','برای','از'];
+const FILLER = ['رو','را','لطفا','جارویس','برام','ی','یه','یک','کن','بزن','باز','زنگ','سرچ','جستجو','به','برای','از','اپ','برنامه'];
 
 function digits(s){ return s.replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)); }
+function openUrl(url){ const w=window.open(url,'_blank'); if(!w) location.href=url; }
 
 /* ---------- اجرای دستورها ---------- */
 const ACTIONS = {
   greet(){ say('سلام! چی کار می‌تونم برات بکنم؟'); },
-  dollar(){ return search('قیمت دلار امروز'); },
+  dollar(){ return search('قیمت دلار امروز در ایران','قیمت دلار امروز چنده؟'); },
   date(){
     const d=new Date();
     say('امروز '+d.toLocaleDateString('fa-IR-u-ca-persian',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' است. تاریخ میلادی: '+d.toLocaleDateString('en-GB'));
@@ -162,12 +222,13 @@ const ACTIONS = {
 };
 
 async function groq(messages,opts={}){
-  const body={model:MODEL,reasoning_effort:'low',temperature:opts.temp??0,messages};
-  if(opts.json) body.response_format={type:'json_object'};
+  const model=opts.model||MODEL, compound=model.startsWith('groq/compound');
+  const body={model,temperature:opts.temp??0,messages};
+  if(!compound){ body.reasoning_effort=opts.effort||'low'; if(opts.json) body.response_format={type:'json_object'}; }
   if(opts.max) body.max_completion_tokens=opts.max;
-  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',
+  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',signal:ctrl&&ctrl.signal,
     headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify(body)});
-  if(!r.ok) throw new Error(r.status+' ['+MODEL+'] '+(await r.text()).slice(0,200));
+  if(!r.ok) throw new Error(r.status+' ['+model+'] '+(await r.text()).slice(0,200));
   return (await r.json()).choices[0].message.content.trim();
 }
 
@@ -176,47 +237,73 @@ async function weather(city){
   speak('یه لحظه، دارم آب‌وهوا رو بررسی می‌کنم');
   try{
     const en=CITIES[city]||city||'';
-    const r=await fetch('https://wttr.in/'+encodeURIComponent(en)+'?format=j1&lang=fa');
+    const r=await fetch('https://wttr.in/'+encodeURIComponent(en)+'?format=j1&lang=fa',{signal:ctrl&&ctrl.signal});
     const j=await r.json(); const c=j.current_condition[0];
     const desc=(c.lang_fa&&c.lang_fa[0]&&c.lang_fa[0].value)||c.weatherDesc[0].value;
-    step.done('آب‌وهوا دریافت شد');
+    chk(); step.done('آب‌وهوا دریافت شد');
     say((city?city+': ':'')+'دما '+c.temp_C+' درجه، احساس‌شده '+c.FeelsLikeC+' درجه، '+desc+'، رطوبت '+c.humidity+' درصد.');
-  }catch(e){ step.fail('دریافت آب‌وهوا ناموفق بود'); say('نتونستم آب‌وهوا رو بگیرم. اینترنت رو چک کن.'); }
+  }catch(e){
+    if(e.name==='AbortError') throw e;
+    step.fail('دریافت آب‌وهوا ناموفق بود'); say('نتونستم آب‌وهوا رو بگیرم. اینترنت رو چک کن.');
+  }
 }
 
-async function search(q){
-  const s1=startStep('در حال جستجو: «'+q+'»…');
+async function search(q,orig){
+  const s1=startStep('در حال جستجو در وب: «'+q+'»…');
   speak('یه لحظه، دارم درباره‌اش جستجو می‌کنم');
+  if(getKey()){
+    try{
+      const a=clean(await groq([
+        {role:'system',content:'You are the web research engine of a Persian voice assistant. Search the web and answer accurately and concisely in natural spoken Persian (2 to 5 sentences). Give concrete facts and numbers when they exist and mention when the info was published if it matters. No markdown, no links, no citation marks. If you cannot find reliable information, say so honestly.'},
+        {role:'user',content:orig||q}],{model:SEARCH_MODEL,temp:.2,max:1500}));
+      chk();
+      if(a){ s1.done('جستجوی وب انجام شد'); return say(a); }
+    }catch(e){ if(e.name==='AbortError') throw e; }
+    s1.set('در حال جستجو در ویکی‌پدیا…');
+  }
   let extract='';
   try{
     const u='https://fa.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(q)+
       '&gsrlimit=1&prop=extracts&exintro=1&explaintext=1&exsentences=6&format=json&origin=*';
-    const j=await (await fetch(u)).json();
+    const j=await (await fetch(u,{signal:ctrl&&ctrl.signal})).json();
     const p=j.query&&Object.values(j.query.pages)[0];
     if(p&&p.extract) extract=p.extract;
-  }catch(e){}
+  }catch(e){ if(e.name==='AbortError') throw e; }
+  chk();
   if(extract){
     s1.done('جستجو در ویکی‌پدیا انجام شد');
     if(getKey()){
       const s2=startStep('در حال خوندن نتیجه‌ها…');
       try{
-        const a=await groq([{role:'system',content:'Answer the user question in short natural spoken Persian (1 to 3 sentences) using ONLY the provided text. If the text does not answer the question, reply exactly: NOT_FOUND'},
-          {role:'user',content:JSON.stringify({question:q,text:extract})}],{max:800});
-        if(a!=='NOT_FOUND'){ s2.done('جواب آماده شد'); return say(a); }
+        const a=clean(await groq([{role:'system',content:'Answer the user question in short natural spoken Persian (1 to 3 sentences) using ONLY the provided text. If the text does not answer the question, reply exactly: NOT_FOUND'},
+          {role:'user',content:JSON.stringify({question:orig||q,text:extract})}],{max:1000}));
+        if(a&&a!=='NOT_FOUND'){ s2.done('جواب آماده شد'); return say(a); }
         s2.fail('نتیجه مرتبط نبود');
-      }catch(e){ s2.fail('خوندن نتیجه ناموفق بود'); }
+      }catch(e){ if(e.name==='AbortError') throw e; s2.fail('خوندن نتیجه ناموفق بود'); }
     }else return say(extract);
   }else s1.fail('نتیجه‌ی مستقیمی پیدا نشد');
-  window.open('https://www.google.com/search?q='+encodeURIComponent(q),'_blank');
-  say('جواب مستقیم پیدا نکردم، نتیجه‌ی گوگل رو برات باز کردم.');
+  say('جواب مستقیم پیدا نکردم، نتیجه‌ی گوگل رو برات باز می‌کنم.');
+  openUrl('https://www.google.com/search?q='+encodeURIComponent(q));
 }
 
-function openApp(name){
+function findApp(name){
+  const n=norm(name).replace(/\s/g,'');
+  if(!n) return null;
   let best=null,bs=0;
-  for(const k in APPS){ const s=sim(name,k); if(s>bs){bs=s;best=k;} }
-  if(best&&bs>=0.7){ window.open(APPS[best],'_blank'); say(best+' رو باز کردم.'); }
-  else if(name){ say('اپ «'+name+'» رو بلد نیستم. سرچش کنم؟ بگو «سرچ کن '+name+'»'); }
-  else say('چی رو باز کنم؟');
+  for(const a of APPS) for(const k of a.names){ const s=sim(n,norm(k).replace(/\s/g,'')); if(s>bs){bs=s;best=a;} }
+  return bs>=0.75?best:null;
+}
+function openApp(name){
+  const app=findApp(name);
+  if(!app){
+    if(name) return say('اپ «'+name+'» رو بلد نیستم. سرچش کنم؟ بگو «سرچ کن '+name+'»');
+    return say('چی رو باز کنم؟');
+  }
+  say(app.names[0]+' رو باز می‌کنم.');
+  if(app.pkg && /Android/i.test(navigator.userAgent)){
+    location.href='intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package='+app.pkg+
+      ';S.browser_fallback_url='+encodeURIComponent(app.web)+';end';
+  }else openUrl(app.web);
 }
 function callTo(name){
   const num=digits(name).replace(/\D/g,'');
@@ -225,7 +312,7 @@ function callTo(name){
 }
 function lastMsg(){ say('خوندن پیام‌ها فقط تو نسخه‌ی اندروید ممکنه. تو مرورگر به نوتیفیکیشن‌ها دسترسی ندارم.'); }
 
-/* ---------- مغز تشخیص منظور ---------- */
+/* ---------- مغز آفلاین (وقتی کلید نیست یا Groq وصل نمیشه) ---------- */
 let pending=null;
 
 function localHandle(raw){
@@ -233,17 +320,15 @@ function localHandle(raw){
   let tokens=t.split(' ').filter(Boolean);
   if(tokens.length && sim(tokens[0],'جارویس')>=0.7){ tokens.shift(); t=tokens.join(' '); }
 
-  // پاسخ به سؤال «منظورت X بود یا Y؟»
   if(pending){
     const opts=pending; pending=null;
     let best=null,bs=0;
     for(const o of opts){ for(const p of SIMPLE[o].phrases){ const s=sim(t,norm(p)); if(s>bs){bs=s;best=o;} } }
-    if(bs>=0.6){ ACTIONS[best](); return; }
+    if(bs>=0.6){ return ACTIONS[best](); }
     say('ببخشید، باز هم نفهمیدم. می‌شه دوباره بگی؟');
     return;
   }
 
-  // دستورهای دارای پارامتر
   const rest=()=>tokens.filter(w=>!FILLER.some(f=>sim(w,f)>=0.85)).join(' ');
   if(hasTok(tokens,'هوا') || hasTok(tokens,'آبوهوا') || (hasTok(tokens,'آب')&&hasTok(tokens,'هوا')))
     return weather(tokens.filter(w=>!['آب','و','هوا','چطوره','چطور','است','آبوهوا','چطوری','هواشناسی','وضعیت'].includes(w)&&!FILLER.includes(w)).join(' '));
@@ -252,7 +337,6 @@ function localHandle(raw){
   if(hasTok(tokens,'زنگ')&&hasTok(tokens,'بزن')) return callTo(rest());
   if(hasTok(tokens,'باز')&&hasTok(tokens,'کن')) return openApp(rest());
 
-  // دستورهای ساده با فاصله‌ی ویرایشی
   const scores=Object.keys(SIMPLE).map(k=>({k,s:Math.max(...SIMPLE[k].phrases.map(p=>sim(t,norm(p))))})).sort((a,b)=>b.s-a.s);
   const [a,b]=scores;
   if(a.s>=0.85 && a.s-b.s>=0.15) return ACTIONS[a.k]();
@@ -271,40 +355,61 @@ function localHandle(raw){
 /* ---------- Groq: فهمیدن منظور و چت ---------- */
 const LABEL={greet:'سلام',dollar:'دلار',date:'تاریخ امروز',time:'ساعت'};
 let askedOptions=null;
-const history=[];
+const convo=[];
 
 const SYS=`You are the intent parser of a Persian voice assistant. The text comes from speech recognition and may contain misheard words (for example "دلام" could be "سلام" or "دلار").
 Reply with JSON only: {"intent":"...","param":"...","options":[]}
 intent is one of: greet, dollar, date, time, weather, search, open_app, call, last_message, ambiguous, chat, unknown.
-- greet: a greeting (سلام). dollar: asks the dollar price. date: today's date. time: current time.
-- weather: param = city name in Persian or "" if none. search: param = the thing to look up.
-- open_app: param = app name in Persian. call: param = phone number or contact name. last_message: param = sender name (e.g. Bro).
+- greet: only a plain greeting (سلام). dollar: asks the dollar price. date: today's date. time: current time.
+- weather: param = city name in Persian or "" if none.
+- search: anything that needs up-to-date or looked-up information: news, prices, sports results, who currently holds a position, recent events, product details, "latest ...". param = a clear self-contained Persian search query (use the recent conversation to complete follow-up questions).
+- open_app: the user wants to open an app or site; param = app name in Persian. call: param = phone number or contact name. last_message: param = sender name (e.g. Bro).
 - If the text is close to two different commands and you cannot decide, intent="ambiguous" and options = the two intent codes (from greet, dollar, date, time).
 - If "pending_question_options" is given, the user is answering the question "did you mean X or Y?". Pick the matching intent from those options; if the answer is unclear, intent="unknown".
-- chat: anything else: small talk, greetings like درود or چخبر, questions, advice, explanations, jokes, any normal conversation with an AI assistant.
-- unknown only if the text is meaningless noise.`;
+- chat: everything else: small talk, questions about you (who are you, who made you), general knowledge, explanations, advice, math, coding, writing, jokes, opinions, any normal conversation.
+- unknown only if the text is meaningless noise.
+"recent" holds the last messages of the conversation for context.`;
 
-async function chat(text){
-  history.push({role:'user',content:text});
-  const reply=await groq([{role:'system',content:'You are Jarvis, a friendly smart voice assistant like ChatGPT or Claude. Always answer in natural spoken Persian, short and clear (1 to 4 sentences unless the user asks for more). No markdown, no emoji, no lists.'},...history.slice(-12)],{temp:.7,max:1200});
-  history.push({role:'assistant',content:reply});
-  say(reply);
+function sysChat(){
+  const now=new Date();
+  const d=now.toLocaleDateString('fa-IR-u-ca-persian',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const tm=now.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'});
+  return `You are Jarvis (جارویس), a warm, sharp and honest Persian voice assistant, in the spirit of Claude: thoughtful, direct, genuinely helpful.
+Identity: if someone asks who made you or who you are, say in Persian that you are Jarvis, that a person named Mehdi (مهدی) built you, and that you run on a language model from OpenAI. Never claim to be human and never claim to be Claude or ChatGPT.
+Now: ${d}, ساعت ${tm}.
+Style: reply in natural spoken Persian. Answer the question directly first. Use 1 to 4 sentences for simple things and up to about 10 when the topic really needs explanation. No markdown, bullet points, emoji or symbols, because your answer is read aloud. Be friendly and casual like a smart friend, and match the user's tone.
+Quality: think carefully before answering. For math, logic, coding and advice questions work it out step by step privately and give a correct, concrete answer. If you are not sure or the information may be outdated, say so honestly instead of guessing. Ask one short clarifying question only when it is really needed.
+Abilities: you run as a web page and can open apps and websites, search the web, check the weather and tell the date and time. You cannot read messages or contacts here. Never pretend to have done something you did not do.`;
 }
 
-async function handle(raw){
-  try{ speechSynthesis.cancel(); speaking=0; }catch(e){}
+async function chat(text){
+  convo.push({role:'user',content:text});
+  try{
+    const reply=clean(await groq([{role:'system',content:sysChat()},...convo.slice(-20)],{temp:.6,effort:'medium',max:3000}));
+    chk();
+    convo.push({role:'assistant',content:reply});
+    say(reply||'ببخشید، جوابی نداشتم. دوباره بپرس.');
+  }catch(e){ convo.pop(); throw e; }
+}
+
+function parseIntent(s){ try{ return JSON.parse(s); }catch(e){ return {intent:'chat'}; } }
+
+async function process(raw){
   add('me',raw);
   if(!getKey()) return localHandle(raw);
+  if(!askedOptions){ const k=fastLocal(raw); if(k) return await ACTIONS[k](); }
   const think=startStep('در حال فکر کردن…');
   try{
-    const res=JSON.parse(await groq([{role:'system',content:SYS},{role:'user',content:JSON.stringify({text:raw,pending_question_options:askedOptions})}],{json:true}));
+    const res=parseIntent(await groq([{role:'system',content:SYS},
+      {role:'user',content:JSON.stringify({text:raw,pending_question_options:askedOptions,recent:convo.slice(-4)})}],{json:true}));
+    chk();
     askedOptions=null;
     const p=(res.param||'').trim();
     if(res.intent!=='chat') think.remove();
     switch(res.intent){
       case 'greet': case 'dollar': case 'date': case 'time': return await ACTIONS[res.intent]();
       case 'weather': return await weather(p);
-      case 'search': return await search(p||raw);
+      case 'search': return await search(p||raw,raw);
       case 'open_app': return openApp(p);
       case 'call': return callTo(p);
       case 'last_message': return lastMsg();
@@ -318,6 +423,7 @@ async function handle(raw){
     }
   }catch(e){
     think.remove();
+    if(e.name==='AbortError') throw e;
     say('به Groq وصل نشدم ('+e.message+'). با روش آفلاین جواب می‌دم.');
     localHandle(raw);
   }finally{ think.remove(); }
@@ -327,9 +433,11 @@ async function handle(raw){
 async function whisper(blob){
   const fd=new FormData();
   fd.append('file',blob,'voice.webm'); fd.append('model','whisper-large-v3'); fd.append('language','fa'); fd.append('temperature','0');
-  const r=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',headers:{Authorization:'Bearer '+getKey()},body:fd});
+  const r=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',signal:ctrl&&ctrl.signal,headers:{Authorization:'Bearer '+getKey()},body:fd});
   if(!r.ok) throw new Error('whisper '+r.status);
-  return (await r.json()).text.trim();
+  const t=(await r.json()).text.trim();
+  if(t.length<2||/زیرنویس|تماشا کردید|مشترک شوید|subtitle/i.test(t)) return '';
+  return t;
 }
 
 function beep(){
@@ -352,14 +460,14 @@ async function recordCommand(){
       for(const v of buf){ const d=(v-128)/128; sum+=d*d; }
       const rms=Math.sqrt(sum/buf.length), now=Date.now();
       if(rms>0.04){ spoke=true; last=now; }
-      if((spoke&&now-last>1300)||now-start>12000||(!spoke&&now-start>6000)){ clearInterval(iv); mr.stop(); }
+      if((ctrl&&ctrl.signal.aborted)||(spoke&&now-last>1300)||now-start>12000||(!spoke&&now-start>6000)){ clearInterval(iv); mr.stop(); }
     },100);
     mr.onstop=async()=>{
       stream.getTracks().forEach(t=>t.stop()); ctx.close();
-      if(!spoke) return res('');
+      if(!spoke||(ctrl&&ctrl.signal.aborted)) return res('');
       setState('think','در حال تشخیص صدا…');
       try{ res(await whisper(new Blob(chunks,{type:mr.mimeType}))); }
-      catch(e){ say('تشخیص صدا کار نکرد ('+e.message+').'); res(''); }
+      catch(e){ if(e.name!=='AbortError') say('تشخیص صدا کار نکرد ('+e.message+').'); res(''); }
     };
   });
 }
@@ -388,15 +496,19 @@ function startWake(){
 }
 
 async function onWake(rest){
+  if(busy||running) return;
   busy=true; try{ rec.onend=null; rec.stop(); }catch(e){}
   beep();
-  let cmd=rest;
-  if(!cmd){
-    if(!getKey()){ busy=false; return startWake(); }
-    setState('listen','گوش می‌دم…');
-    try{ cmd=await recordCommand(); }catch(e){ cmd=''; say('به میکروفون دسترسی نداشتم.'); }
-  }
-  if(cmd){ setState('think','در حال پردازش…'); await handle(cmd); await waitSpeech(); }
+  await run(async()=>{
+    let cmd=rest;
+    if(!cmd){
+      if(!getKey()) return;
+      setState('listen','گوش می‌دم…');
+      try{ cmd=await recordCommand(); }catch(e){ cmd=''; say('به میکروفون دسترسی نداشتم.'); }
+    }
+    chk();
+    if(cmd){ setState('think','در حال پردازش…'); await process(cmd); }
+  });
   busy=false;
   if(listening) startWake();
 }
@@ -421,8 +533,12 @@ else{
   if(!getKey()) keypanel.classList.add('show');
 }
 
-function sendTxt(){ const v=txt.value.trim(); if(v){ txt.value=''; handle(v); } }
-document.getElementById('send').onclick=sendTxt;
+function sendTxt(){
+  if(running) return;
+  const v=txt.value.trim(); if(!v) return;
+  txt.value=''; run(()=>process(v));
+}
+sendBtn.onclick=()=>{ if(running) stopAll(); else sendTxt(); };
 txt.addEventListener('keydown',e=>{ if(e.key==='Enter') sendTxt(); });
 
 add('ai','سلام، من جارویسم. دکمه‌ی صدا رو بزن و بعد بگو «هی جارویس».');
