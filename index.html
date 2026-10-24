@@ -53,10 +53,29 @@
   #keypanel .row{display:flex;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px}
   #keyin{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font-size:15px;font-family:inherit;outline:none;padding:6px 8px;direction:ltr;text-align:left}
   #keysave{background:var(--accent);color:#fff;border-radius:12px;padding:8px 16px;font-size:14px}
+  .ver{font-family:system-ui,-apple-system,sans-serif;font-size:12px;font-weight:500;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:2px 10px;vertical-align:middle;margin-inline-start:8px;background:var(--card)}
+  .m.md{white-space:normal}
+  .md p{margin:0 0 10px}
+  .md h4{margin:14px 0 6px;font-size:16.5px}
+  .md ul,.md ol{margin:0 0 10px;padding-inline-start:24px}
+  .md li{margin-bottom:4px}
+  .md a{color:var(--accent)}
+  .md :not(pre)>code{background:var(--bubble);padding:1px 6px;border-radius:6px;font-size:.9em;direction:ltr;unicode-bidi:isolate;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .code{margin:12px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+  .ch{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;font-size:12px;color:var(--mute);border-bottom:1px solid var(--line);direction:ltr}
+  .cb{display:flex;gap:2px;direction:rtl}
+  .cb button{background:transparent;color:var(--accent);font-size:13px;padding:4px 10px;border-radius:8px}
+  .cb button:hover{background:var(--bubble)}
+  .code pre{margin:0;padding:12px 14px;overflow-x:auto;direction:ltr;text-align:left;font-size:13px;line-height:1.65;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .pv{display:block;width:100%;height:340px;border:0;border-top:1px solid var(--line);background:#fff}
+  .ov{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column}
+  .ov .ob{display:flex;justify-content:flex-end;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;border-bottom:1px solid var(--line)}
+  .ov .ob button{background:var(--accent);color:#fff;border-radius:10px;padding:8px 16px;font-size:14px}
+  .ov iframe{flex:1;border:0;background:#fff;width:100%}
 </style>
 </head>
 <body>
-<header><h1>جارویس</h1><div id="state">دکمه‌ی صدا رو بزن تا گوش بدم</div>
+<header><h1>جارویس<span class="ver">Jarvis 1.0</span></h1><div id="state">دکمه‌ی صدا رو بزن تا گوش بدم</div>
   <button id="keybtn" title="کلید API" aria-label="کلید API"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg></button>
 </header>
 <div id="keypanel"><div class="row"><input id="keyin" type="password" placeholder="gsk_..." autocomplete="off"><button id="keysave">ذخیره</button></div></div>
@@ -129,6 +148,90 @@ function waitSpeech(){ return new Promise(r=>{ const iv=setInterval(()=>{ if(spe
 function clean(t){
   return t.replace(/【[^】]*】/g,'').replace(/\[\d+\]/g,'').replace(/\[([^\]]*)\]\([^)]*\)/g,'$1')
     .replace(/[*`#>]+/g,'').replace(/^\s*[-•]\s+/gm,'').replace(/\n{3,}/g,'\n\n').trim();
+}
+
+/* ---------- نمایش مارک‌داون و کد (مثل کلود) ---------- */
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function inline(s){
+  s=esc(s);
+  s=s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+  s=s.replace(/\[([^\]]+)\]\((https?:[^)\s"']+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return s;
+}
+function proseHTML(t){
+  const out=[]; let list=null;
+  const close=()=>{ if(list){ out.push('</'+list+'>'); list=null; } };
+  for(const line of t.split('\n')){
+    let m;
+    if((m=/^\s*(#{1,4})\s+(.*)/.exec(line))){ close(); out.push('<h4>'+inline(m[2])+'</h4>'); }
+    else if((m=/^\s*[-*•]\s+(.*)/.exec(line))){ if(list!=='ul'){ close(); out.push('<ul>'); list='ul'; } out.push('<li>'+inline(m[1])+'</li>'); }
+    else if((m=/^\s*\d+[.)]\s+(.*)/.exec(line))){ if(list!=='ol'){ close(); out.push('<ol>'); list='ol'; } out.push('<li>'+inline(m[1])+'</li>'); }
+    else if(!line.trim()){ close(); }
+    else{ close(); out.push('<p>'+inline(line)+'</p>'); }
+  }
+  close();
+  return out.join('');
+}
+function copyText(t){
+  const fb=()=>{ const a=document.createElement('textarea'); a.value=t; document.body.appendChild(a); a.select(); try{document.execCommand('copy');}catch(e){} a.remove(); };
+  try{ navigator.clipboard.writeText(t).catch(fb); }catch(e){ fb(); }
+}
+function runKind(lang,code){
+  if(['html','htm'].includes(lang)||(!lang&&/<!doctype|<html/i.test(code))) return 'html';
+  if(['js','javascript'].includes(lang)) return 'js';
+  return null;
+}
+function srcdocFor(kind,code){
+  if(kind==='html') return code;
+  return '<!DOCTYPE html><meta charset="utf-8"><body style="font-family:monospace;padding:10px;background:#fff;color:#111;direction:ltr"><pre id="o" style="white-space:pre-wrap"></pre><script>const o=document.getElementById("o");const p=(...a)=>{o.textContent+=a.map(x=>typeof x==="object"?JSON.stringify(x):String(x)).join(" ")+"\\n"};console.log=p;console.error=(...a)=>p("خطا:",...a);window.onerror=m=>p("خطا:",m);try{\n'+code+'\n}catch(e){p("خطا:",e.message)}<\/script>';
+}
+function fullscreen(src){
+  const ov=document.createElement('div'); ov.className='ov';
+  const bar=document.createElement('div'); bar.className='ob';
+  const b=document.createElement('button'); b.textContent='بستن'; b.onclick=()=>ov.remove(); bar.appendChild(b);
+  const f=document.createElement('iframe'); f.sandbox='allow-scripts allow-forms allow-modals'; f.srcdoc=src;
+  ov.append(bar,f); document.body.appendChild(ov);
+}
+function makeCode(lang,code,canRun){
+  const wrap=document.createElement('div'); wrap.className='code';
+  const head=document.createElement('div'); head.className='ch';
+  const label=document.createElement('span'); label.textContent=lang||'code'; head.appendChild(label);
+  const btns=document.createElement('span'); btns.className='cb'; head.appendChild(btns);
+  const mk=(t,fn)=>{ const b=document.createElement('button'); b.textContent=t; b.onclick=()=>fn(b); btns.appendChild(b); return b; };
+  mk('کپی',b=>{ copyText(code); b.textContent='کپی شد'; setTimeout(()=>{b.textContent='کپی';},1500); });
+  const kind=runKind(lang,code);
+  let frame=null;
+  if(canRun&&kind){
+    mk('تمام‌صفحه',()=>fullscreen(srcdocFor(kind,code)));
+    mk('اجرا',b=>{
+      if(frame){ frame.remove(); frame=null; b.textContent='اجرا'; }
+      else{ frame=document.createElement('iframe'); frame.className='pv'; frame.sandbox='allow-scripts allow-forms allow-modals'; frame.srcdoc=srcdocFor(kind,code); wrap.appendChild(frame); b.textContent='بستن'; }
+    });
+  }
+  const pre=document.createElement('pre'); const c=document.createElement('code'); c.textContent=code; pre.appendChild(c);
+  wrap.append(head,pre);
+  return wrap;
+}
+function renderMD(el,text,final){
+  el.textContent='';
+  const re=/```([\w+#-]*)[^\n]*\n([\s\S]*?)(```|$)/g;
+  let last=0,m;
+  const prose=t=>{ if(!t.trim()) return; const d=document.createElement('div'); d.innerHTML=proseHTML(t); el.appendChild(d); };
+  while((m=re.exec(text))){
+    prose(text.slice(last,m.index));
+    el.appendChild(makeCode((m[1]||'').toLowerCase(),m[2].replace(/\n$/,''),final&&m[3]==='```'));
+    last=m.index+m[0].length;
+    if(m[0].length===0) re.lastIndex++;
+  }
+  prose(text.slice(last));
+}
+function speakable(t){
+  const hadCode=/```/.test(t);
+  let s=clean(t.replace(/```[\s\S]*?(```|$)/g,' ')).replace(/\s+/g,' ').trim();
+  if(s.length>1200) s=s.slice(0,1200)+'…';
+  if(hadCode) s+=(s?' ':'')+'کدش رو توی صفحه نوشتم.';
+  return s;
 }
 
 /* ---------- مرحله‌های وضعیت (مثل کلود/چت‌جی‌پی‌تی) ---------- */
@@ -230,6 +333,28 @@ async function groq(messages,opts={}){
     headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify(body)});
   if(!r.ok) throw new Error(r.status+' ['+model+'] '+(await r.text()).slice(0,200));
   return (await r.json()).choices[0].message.content.trim();
+}
+
+async function groqStream(messages,opts,onDelta){
+  const body={model:MODEL,temperature:opts.temp??0.6,messages,stream:true,reasoning_effort:opts.effort||'medium'};
+  if(opts.max) body.max_completion_tokens=opts.max;
+  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',signal:ctrl&&ctrl.signal,
+    headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error(r.status+' ['+MODEL+'] '+(await r.text()).slice(0,200));
+  const reader=r.body.getReader(), dec=new TextDecoder();
+  let buf='', full='';
+  while(true){
+    const {done,value}=await reader.read(); if(done) break;
+    buf+=dec.decode(value,{stream:true});
+    let i;
+    while((i=buf.indexOf('\n'))>=0){
+      const line=buf.slice(0,i).trim(); buf=buf.slice(i+1);
+      if(!line.startsWith('data:')) continue;
+      const d=line.slice(5).trim(); if(!d||d==='[DONE]') continue;
+      try{ const c=JSON.parse(d).choices[0].delta.content; if(c){ full+=c; onDelta(full); } }catch(e){}
+    }
+  }
+  return full;
 }
 
 async function weather(city){
@@ -366,7 +491,7 @@ intent is one of: greet, dollar, date, time, weather, search, open_app, call, la
 - open_app: the user wants to open an app or site; param = app name in Persian. call: param = phone number or contact name. last_message: param = sender name (e.g. Bro).
 - If the text is close to two different commands and you cannot decide, intent="ambiguous" and options = the two intent codes (from greet, dollar, date, time).
 - If "pending_question_options" is given, the user is answering the question "did you mean X or Y?". Pick the matching intent from those options; if the answer is unclear, intent="unknown".
-- chat: everything else: small talk, questions about you (who are you, who made you), general knowledge, explanations, advice, math, coding, writing, jokes, opinions, any normal conversation.
+- chat: everything else: small talk, questions about you (who are you, who made you), general knowledge, explanations, advice, math, coding, writing code, jokes, opinions, any normal conversation.
 - unknown only if the text is meaningless noise.
 "recent" holds the last messages of the conversation for context.`;
 
@@ -374,22 +499,37 @@ function sysChat(){
   const now=new Date();
   const d=now.toLocaleDateString('fa-IR-u-ca-persian',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const tm=now.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'});
-  return `You are Jarvis (جارویس), a warm, sharp and honest Persian voice assistant, in the spirit of Claude: thoughtful, direct, genuinely helpful.
-Identity: if someone asks who made you or who you are, say in Persian that you are Jarvis, that a person named Mehdi (مهدی) built you, and that you run on a language model from OpenAI. Never claim to be human and never claim to be Claude or ChatGPT.
+  return `You are Jarvis 1.0 (جارویس), a warm, sharp and honest Persian assistant, in the spirit of Claude: thoughtful, direct, genuinely helpful.
+Identity: if someone asks who made you or who you are, say in Persian that you are Jarvis 1.0, that a person named Mehdi (مهدی) built you, and that you run on a language model from OpenAI. Never claim to be human and never claim to be Claude or ChatGPT.
 Now: ${d}, ساعت ${tm}.
-Style: reply in natural spoken Persian. Answer the question directly first. Use 1 to 4 sentences for simple things and up to about 10 when the topic really needs explanation. No markdown, bullet points, emoji or symbols, because your answer is read aloud. Be friendly and casual like a smart friend, and match the user's tone.
+Style: reply in natural Persian and answer the question directly first. For casual or simple questions use 1 to 4 plain sentences, because they may be read aloud. When a topic really needs it you may write longer answers with short lists or bold. Never use emoji. Be friendly and casual like a smart friend and match the user's tone.
+Code: when the user asks you to write, fix or explain code, put the complete, working code in fenced code blocks with a language tag (html, javascript, python and so on). For web pages, games, tools and visual demos write ONE self-contained HTML file with inline CSS and JS and no external libraries or network requests, so the Run button in the chat can run it. Say in one short sentence what you are building before the code, and after the code explain in 1 to 3 sentences how it works or how to use it. Write comments and explanations in Persian. Never leave code half-finished.
 Quality: think carefully before answering. For math, logic, coding and advice questions work it out step by step privately and give a correct, concrete answer. If you are not sure or the information may be outdated, say so honestly instead of guessing. Ask one short clarifying question only when it is really needed.
-Abilities: you run as a web page and can open apps and websites, search the web, check the weather and tell the date and time. You cannot read messages or contacts here. Never pretend to have done something you did not do.`;
+Abilities: you run as a web page and can open apps and websites, search the web, check the weather, tell the date and time, and write code; the user can run html and javascript code blocks with the Run button. You cannot run Python or other languages, and you cannot read messages or contacts here. Never pretend to have done something you did not do.`;
 }
 
-async function chat(text){
+async function chat(text,think){
   convo.push({role:'user',content:text});
+  let bubble=null, partial='', raf=false;
+  const mkBubble=()=>{ if(!bubble){ if(think) think.remove(); bubble=document.createElement('div'); bubble.className='m ai md'; log.appendChild(bubble); } };
   try{
-    const reply=clean(await groq([{role:'system',content:sysChat()},...convo.slice(-20)],{temp:.6,effort:'medium',max:3000}));
+    const full=await groqStream([{role:'system',content:sysChat()},...convo.slice(-20)],{temp:.6,effort:'medium',max:8000},t=>{
+      partial=t; mkBubble();
+      if(!raf){ raf=true; requestAnimationFrame(()=>{ raf=false; renderMD(bubble,partial,false); scrollDown(); }); }
+    });
     chk();
+    const reply=full.trim()||'ببخشید، جوابی نداشتم. دوباره بپرس.';
+    mkBubble(); renderMD(bubble,reply,true); scrollDown();
     convo.push({role:'assistant',content:reply});
-    say(reply||'ببخشید، جوابی نداشتم. دوباره بپرس.');
-  }catch(e){ convo.pop(); throw e; }
+    speak(speakable(reply));
+  }catch(e){
+    convo.pop();
+    if(e.name==='AbortError' && bubble && partial.trim()){
+      renderMD(bubble,partial,true);
+      convo.push({role:'user',content:text},{role:'assistant',content:partial});
+    }
+    throw e;
+  }
 }
 
 function parseIntent(s){ try{ return JSON.parse(s); }catch(e){ return {intent:'chat'}; } }
@@ -418,7 +558,7 @@ async function process(raw){
         if(o.length===2){ askedOptions=o; return say('ببخشید، منظورت '+LABEL[o[0]]+' بود یا '+LABEL[o[1]]+'؟'); }
         return say('ببخشید، منظورت رو نفهمیدم.');
       }
-      case 'chat': return await chat(raw);
+      case 'chat': return await chat(raw,think);
       default: return say('ببخشید، منظورت رو نفهمیدم.');
     }
   }catch(e){
