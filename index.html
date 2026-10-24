@@ -177,7 +177,7 @@ body.empty #main{justify-content:center}
  </aside>
  <div id="scrim"></div>
  <main id="main">
-  <div id="top"><button class="ib" id="menuBtn" data-ic="menu" aria-label="منو"></button><div id="ttl"></div><span id="wakeInd" hidden><i></i>هی جارویس</span><button class="ib" id="topNew" data-ic="edit" aria-label="گفتگوی جدید"></button></div>
+  <div id="top"><button class="ib" id="menuBtn" data-ic="menu" aria-label="منو"></button><div id="ttl"></div><span id="wakeInd" hidden><i></i>هی جارویس</span><button class="ib" id="keyTop" data-ic="key" aria-label="کلید API"></button><button class="ib" id="topNew" data-ic="edit" aria-label="گفتگوی جدید"></button></div>
   <div id="home"><div class="mark" data-ic="spark"></div><h2 id="greet"></h2></div>
   <div id="scroller"><div id="log"></div></div>
   <div id="composerWrap">
@@ -224,6 +224,7 @@ const ICON={
   gear:S+'<circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg>',
   trash:S+'<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg>',
   spark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.8 5.2 4.8 9.2 10 10-5.2.8-9.2 4.8-10 10-.8-5.2-4.8-9.2-10-10 5.2-.8 9.2-4.8 10-10z"/></svg>',
+  key:S+'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg>',
   doc:S+'<path d="M7 3h7l5 5v13H7zM14 3v5h5"/></svg>'
 };
 const ic=n=>ICON[n]||'';
@@ -669,20 +670,21 @@ function buildApi(){
 }
 async function chat(msg,think){
   const {list,vision}=buildApi();
-  let w=null,b=null,partial='',raf=false;
+  let w=null,b=null,partial='',raf=false,fin=false;
   const mk=()=>{if(!w){if(think)think.remove();w=mkEl('div','msg asst');b=mkEl('div','ab md');w.appendChild(b);log.appendChild(w);}};
   try{
     const full=await groqStream(vision?VISION_MODEL:MODEL,list,{temp:.6,effort:'medium',max:8000},t=>{
       partial=stripThink(t);if(!partial.trim())return;mk();
-      if(!raf){raf=true;requestAnimationFrame(()=>{raf=false;renderMD(b,partial,false);scrollDown();});}
+      if(!raf){raf=true;requestAnimationFrame(()=>{raf=false;if(fin)return;renderMD(b,partial,false);scrollDown();});}
     });
-    chk();
+    chk();fin=true;
     const reply=stripThink(full).trim()||'ببخشید، جوابی نداشتم. دوباره بپرس.';
     mk();
     const m={role:'assistant',text:reply,sources:[]};cur.messages.push(m);
     renderMD(b,reply,true);addExtras(w,m);scrollDown();persist();
     speak(speakable(reply));afterAssistant();
   }catch(e){
+    fin=true;
     if(e.name==='AbortError'&&w&&partial.trim()){
       const m={role:'assistant',text:partial,sources:[]};cur.messages.push(m);
       renderMD(b,partial,true);addExtras(w,m);persist();
@@ -701,7 +703,7 @@ function failText(e){
   return 'نتونستم به مغزم وصل بشم. اینترنت و VPN رو چک کن و دوباره بفرست.';
 }
 async function process(msg){
-  if(!getKey()){openSettings();return sayAsst('برای شروع، کلید Groq رو از تنظیمات (بخش «کلید API») بذار تا بتونیم حرف بزنیم.');}
+  if(!getKey()){if(SHOW_KEY_BUTTON)openKeySheet();return sayAsst('برای شروع، کلید Groq رو با دکمه‌ی کلید بالای صفحه وارد کن تا بتونیم حرف بزنیم.');}
   const think=startStep('در حال فکر کردن…');
   try{
     if((msg.atts||[]).length)return await chat(msg,think);
@@ -815,6 +817,20 @@ function openSettings(){
   };
   $('sClear').onclick=()=>{if(confirm('همه‌ی گفتگوها برای همیشه پاک بشن؟')){chats=[];store.set('jv_chats',[]);newChat();$('modal').classList.remove('show');}};
   $('modal').classList.add('show');
+}
+
+function openKeySheet(){
+  $('sheet').innerHTML=`<div class="sht"><b>کلید API</b><button class="ib" id="kClose">${ic('x')}</button></div>
+  <div style="color:var(--mute);font-size:13px">کلید Groq (با gsk_ شروع میشه) فقط توی مرورگر خودت ذخیره میشه.</div>
+  <div class="row"><input id="kIn" type="password" dir="ltr" autocomplete="off" placeholder="${getKey()?'ذخیره شده؛ برای عوض کردن، کلید جدید رو بذار':'gsk_...'}"><button id="kSave" class="btn">ذخیره</button></div>`;
+  $('kClose').onclick=()=>$('modal').classList.remove('show');
+  $('kSave').onclick=()=>{
+    const v=$('kIn').value.trim();
+    if(!v.startsWith('gsk_'))return toast('این شبیه کلید Groq نیست؛ باید با gsk_ شروع بشه');
+    try{localStorage.setItem('groqkey',v);}catch(e){return toast('مرورگر اجازه‌ی ذخیره‌ی کلید رو نداد');}
+    $('modal').classList.remove('show');toast('کلید ذخیره شد');
+  };
+  $('modal').classList.add('show');setTimeout(()=>$('kIn').focus(),50);
 }
 
 /* ---------- پیوست‌ها ---------- */
@@ -973,7 +989,7 @@ function waitSpeech(){return new Promise(r=>{const iv=setInterval(()=>{if(!ttsBu
 let vActive=false;
 function setVoiceUI(state,cap){const v=$('vo');v.className='vo show '+(state||'');if(cap!=null)$('vcap').textContent=cap;}
 function startVoice(){
-  if(!getKey()){openSettings();return;}
+  if(!getKey()){if(SHOW_KEY_BUTTON)openKeySheet();return;}
   if(vActive)return;
   vActive=true;wakeSync();setVoiceUI('listen','');voiceLoop();
 }
@@ -1006,7 +1022,7 @@ $('vEnd').onclick=endVoice;
 let dictating=false;
 async function toggleDictate(){
   if(dictating){recSignal='end';return;}
-  if(!getKey()){openSettings();return;}
+  if(!getKey()){if(SHOW_KEY_BUTTON)openKeySheet();return;}
   dictating=true;$('mic').classList.add('rec');
   const r=await recordAudio({max:60000,silence:2200,noSpeech:8000});
   dictating=false;$('mic').classList.remove('rec');
@@ -1059,6 +1075,7 @@ async function onWake(rest){
 
 /* ---------- راه‌اندازی ---------- */
 $('newChat').onclick=newChat;$('topNew').onclick=newChat;
+if(SHOW_KEY_BUTTON)$('keyTop').onclick=openKeySheet;else $('keyTop').style.display='none';
 $('menuBtn').onclick=openMenu;$('sideClose').onclick=closeMenu;$('scrim').onclick=closeMenu;
 $('profile').onclick=openSettings;
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modal').classList.remove('show');});
@@ -1067,4 +1084,3 @@ applyTheme();newChat();wakeSync();
 </script>
 </body>
 </html>
-
