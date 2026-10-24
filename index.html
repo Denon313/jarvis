@@ -158,6 +158,11 @@ body.empty #main{justify-content:center}
 .vhint{font-size:13px;color:var(--mute)}
 #toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:90;max-width:90vw}
 #toast.show{opacity:1}
+
+.gimg{display:block;max-width:min(100%,440px);border-radius:16px;border:1px solid var(--line);cursor:zoom-in;margin-bottom:8px}
+.ov img{flex:1;min-height:0;object-fit:contain;background:#000}
+.ov .ob{gap:8px}
+.ov .ob a{background:var(--bubble);color:var(--text);border-radius:10px;padding:8px 16px;font-size:14px;text-decoration:none}
 @media (max-width:820px){
   #side{position:fixed;inset-block:0;inset-inline-start:0;z-index:40;transform:translateX(100%);width:min(310px,86vw)}
   body.menu #side{transform:none}
@@ -205,7 +210,9 @@ body.empty #main{justify-content:center}
 const SHOW_KEY_BUTTON=true; // false = بخش کلید از تنظیمات مخفی میشه (منطق API دست نمی‌خوره)
 const GROQ_KEY='';
 const MODEL='openai/gpt-oss-120b';
-const VISION_MODEL='qwen/qwen3.6-27b';
+const VISION_MODELS=['qwen/qwen3.6-27b','qwen/qwen3.8-27b'];
+const GEMINI_KEY='';
+const GEMINI_VOICE='Kore';
 const $=id=>document.getElementById(id);
 
 /* ---------- آیکون‌ها ---------- */
@@ -225,6 +232,7 @@ const ICON={
   trash:S+'<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg>',
   spark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.8 5.2 4.8 9.2 10 10-5.2.8-9.2 4.8-10 10-.8-5.2-4.8-9.2-10-10 5.2-.8 9.2-4.8 10-10z"/></svg>',
   key:S+'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg>',
+  download:S+'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>',
   doc:S+'<path d="M7 3h7l5 5v13H7zM14 3v5h5"/></svg>'
 };
 const ic=n=>ICON[n]||'';
@@ -233,6 +241,7 @@ document.querySelectorAll('[data-ic]').forEach(e=>{e.innerHTML=ic(e.dataset.ic);
 /* ---------- ذخیره‌سازی و وضعیت ---------- */
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}};
 function getKey(){let k='';try{k=localStorage.getItem('groqkey')||'';}catch(e){}k=k||GROQ_KEY;return k.startsWith('gsk_')?k:'';}
+function getGeminiKey(){let k='';try{k=localStorage.getItem('geminikey')||'';}catch(e){}k=k||GEMINI_KEY;return k.startsWith('AIza')?k:'';}
 const settings=Object.assign({name:'',instructions:'',theme:'auto',voiceReplies:true,wake:false,speed:1},store.get('jv_settings',{}));
 let memory=store.get('jv_memory',[]);
 let chats=store.get('jv_chats',[]);
@@ -240,7 +249,7 @@ let cur=null,pending=[],askedOptions=null;
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 function saveSettings(){store.set('jv_settings',settings);}
 function serialize(){
-  return chats.map(c=>({id:c.id,title:c.title,updated:c.updated,titled:c.titled,messages:c.messages.map(m=>({role:m.role,text:m.text,sources:m.sources,google:m.google,err:m.err,
+  return chats.map(c=>({id:c.id,title:c.title,updated:c.updated,titled:c.titled,messages:c.messages.map(m=>({role:m.role,text:m.text,sources:m.sources,google:m.google,err:m.err,img:m.img,imgPrompt:m.imgPrompt,
     atts:(m.atts||[]).map(a=>({type:a.type,name:a.name,thumb:a.thumb,text:a.type==='file'?a.text:undefined}))}))}));
 }
 function persist(){
@@ -385,9 +394,21 @@ function addExtras(w,m){
   if(m.err){const e=mkEl('div','errd');e.textContent=m.err;w.appendChild(e);}
   const acts=mkEl('div','acts');
   acts.append(iconBtn('copy',()=>copyText(m.text),'کپی'),iconBtn('retry',()=>regen(m),'دوباره بساز'));
+  if(m.img||m.imgFull){const dl=iconBtn('download',()=>{const a=document.createElement('a');a.href=m.imgFull||m.img;a.download='jarvis.png';a.click();},'ذخیره');acts.appendChild(dl);}
   w.appendChild(acts);
 }
-function asstEl(m){const w=mkEl('div','msg asst'),b=mkEl('div','ab md');renderMD(b,m.text,true);w.appendChild(b);addExtras(w,m);return w;}
+function asstEl(m){
+  const w=mkEl('div','msg asst');
+  if(m.img||m.imgFull){const im=mkEl('img','gimg');im.src=m.imgFull||m.img;im.onclick=()=>viewImage(im.src);w.appendChild(im);}
+  const b=mkEl('div','ab md');renderMD(b,m.text,true);w.appendChild(b);addExtras(w,m);return w;
+}
+function viewImage(src){
+  const ov=mkEl('div','ov'),bar=mkEl('div','ob');
+  const dl=mkEl('a');dl.href=src;dl.download='jarvis.png';dl.textContent='ذخیره';
+  const b=mkEl('button');b.textContent='بستن';b.onclick=()=>ov.remove();
+  bar.append(dl,b);const im=document.createElement('img');im.src=src;
+  ov.append(bar,im);document.body.appendChild(ov);
+}
 function renderAll(){
   log.textContent='';
   for(const m of cur.messages)log.appendChild(m.role==='user'?userEl(m):asstEl(m));
@@ -534,20 +555,27 @@ Tone: talk like a close, warm Iranian friend: informal natural Persian (تو، �
 Persian-first: understand Finglish (like "salam chetori"), slang and typos; use Iranian context (تومان، شمسی، تهران) when relevant; reply in the language the user writes in.
 Style: answer the question directly first. For casual or simple things use 1 to 4 short sentences. For topics that really need depth, write a fuller answer with short lists or bold. Never use emoji.
 Code: when asked to write, fix or explain code, put complete, working code in fenced code blocks with a language tag (html, javascript, python...). For web pages, games, tools and visual demos write ONE self-contained HTML file with inline CSS and JS and no external libraries or network requests, so the Run button in the chat can run it. Say in one short sentence what you are building before the code, and after the code explain in 1 to 3 sentences how to use it. Comments and explanations in Persian. Never leave code half-finished.
+Understanding: people type fast, make typos, write Finglish, or the text comes from speech recognition with wrong words. Always work out what they most likely meant from the context and the conversation, and answer that. If your reading differs from the literal text, say naturally what you understood; ask only when it is truly ambiguous.
+Purpose: you are the user's personal phone assistant in the making. When they ask you to open an app or call someone, say warmly that this part arrives with the mobile app, and give the closest useful help right now (a direct link, or the exact steps). Never just say you cannot.
 Quality: think carefully before answering. For math, logic, coding and advice work it out step by step privately and give a correct, concrete answer. If you are not sure or the information may be outdated, say so honestly instead of guessing. Ask one short clarifying question only when it is really needed.
-Abilities: the app searches the web for you when a question needs fresh information, checks the weather, knows the date and time, lets the user attach images, video (you see a few frames) and text files, and runs html/javascript code blocks with a Run button. You cannot open apps or make calls yet (that comes with the mobile app), and you cannot read messages or contacts. Never pretend to have done something you did not do.`+who+ins+mem+voice;
+Abilities: the app searches the web for you when a question needs fresh information, checks the weather, knows the date and time, lets the user attach images, video (you see a few frames) and text files, creates and edits images when the user asks (with their Gemini key), and runs html/javascript code blocks with a Run button. You cannot open apps or make calls yet (that comes with the mobile app), and you cannot read messages or contacts. Never pretend to have done something you did not do.`+who+ins+mem+voice;
 }
 const SYS_INTENT=`You are the intent parser of a Persian assistant. The text may come from speech recognition and contain misheard words (for example "دلام" could be "سلام" or "دلار").
-Reply with JSON only: {"intent":"...","param":"...","options":[]}
-intent is one of: greet, dollar, date, time, weather, search, remember, ambiguous, chat, unknown.
+Reply with JSON only: {"intent":"...","param":"...","options":[],"fixed":"","effort":"medium"}
+intent is one of: greet, dollar, date, time, weather, search, remember, image_edit, image_gen, ambiguous, chat, unknown.
 - greet: only a plain greeting (سلام). dollar: asks the dollar price. date: today's date. time: current time.
 - weather: param = city name in Persian or "" if none.
-- search: anything that needs fresh or looked-up information: news, scores, match schedules and results, prices, who currently holds a position, recent events, release dates, opening hours, "latest ...", "tomorrow's game". When in doubt about whether information could have changed, choose search. param = a clear self-contained Persian search query that includes names and context (use the recent conversation to complete follow-ups).
+- search: anything that needs fresh or looked-up information: news, scores, match schedules and results, prices, who currently holds a position, recent events, release dates, opening hours, "latest ...", "tomorrow's game". When in doubt about whether information could have changed, choose search. param = a clear self-contained Persian search query with names and context (use the recent conversation to complete follow-ups).
 - remember: the user asks you to remember something about them ("یادت باشه ...", "به خاطر بسپار ..."); param = the fact as a short Persian sentence.
+- image_edit: the user wants to change, edit or transform an existing image: add or remove a person or object, change background, clothes, colors, style, make it look like something. It applies to the attached image ("has_attachment" true) or the image just discussed or generated. param = a precise English instruction describing exactly the change.
+- image_gen: the user wants a NEW image created from a description (draw, make a picture, نقاشی کن، عکس بساز). param = a detailed, vivid English prompt.
+- If the user attached an image and only asks about it (what is this, read the text, describe), intent is chat.
 - If the text is close to two different commands and you cannot decide, intent="ambiguous" and options = the two intent codes (from greet, dollar, date, time).
 - If "pending_question_options" is given, the user is answering "did you mean X or Y?". Pick the matching intent from those options; if unclear, intent="unknown".
 - chat: everything else: small talk, questions about you, general knowledge, explanations, advice, math, writing and coding, jokes, opinions, normal conversation.
 - unknown only if the text is meaningless noise.
+- fixed: if the text has typos, spoken-language mistakes or likely speech-recognition errors, write the corrected Persian text (what the user most likely meant); otherwise "".
+- effort (only matters for chat): "low" for small talk and simple questions, "medium" for normal questions, "high" for hard math, logic, long code, deep analysis, planning or anything that needs careful reasoning.
 "recent" holds the last messages of the conversation.`;
 
 /* ---------- دستورهای سریع ---------- */
@@ -648,13 +676,15 @@ async function search(q,orig){
 }
 
 /* ---------- چت (استریم) ---------- */
-function buildApi(){
+function buildApi(fixed){
   const msgs=cur.messages.slice(-20);let vision=false;
-  const list=[{role:'system',content:sysChat()}];
+  let sys=sysChat();
+  if(fixed)sys+='\n\nNote: the last user message may contain typos or speech-recognition mistakes. Most likely intended meaning: "'+fixed+'". Answer that meaning; only if it is truly ambiguous, briefly say what you understood.';
+  const list=[{role:'system',content:sys}];
   let lastImg=-1;
-  msgs.forEach((m,i)=>{if(m.role==='user'&&(m.atts||[]).some(a=>a.full||a.frames))lastImg=i;});
+  msgs.forEach((m,i)=>{if(m.role==='user'&&i>=msgs.length-4&&(m.atts||[]).some(a=>a.full||a.frames))lastImg=i;});
   msgs.forEach((m,i)=>{
-    if(m.role==='assistant'){list.push({role:'assistant',content:m.text});return;}
+    if(m.role==='assistant'){list.push({role:'assistant',content:m.text+(m.imgPrompt?' [عکسی که ساختی: '+m.imgPrompt+']':'')});return;}
     let text=m.text||'';const imgs=[];
     for(const a of (m.atts||[])){
       if(a.type==='file')text+='\n\n[فایل پیوست: '+a.name+']\n```\n'+a.text+'\n```';
@@ -663,20 +693,40 @@ function buildApi(){
         if(a.type==='video')text+='\n\n[ویدیوی پیوست: '+a.name+' — چند فریم از ویدیو ضمیمه شده]';
       }else text+='\n\n[پیوست: '+a.name+' (قبلاً دیده شد)]';
     }
-    if(imgs.length){vision=true;list.push({role:'user',content:[{type:'text',text:text||'این رو ببین'},...imgs.slice(0,5).map(u=>({type:'image_url',image_url:{url:u}}))]});}
+    if(imgs.length){vision=true;list.push({role:'user',content:[...imgs.slice(0,5).map(u=>({type:'image_url',image_url:{url:u}})),{type:'text',text:text||'این رو ببین و بگو چیه'}]});}
     else list.push({role:'user',content:text});
   });
+  if(vision){
+    const s0=list.shift().content;
+    for(let i=list.length-1;i>=0;i--)if(list[i].role==='user'&&Array.isArray(list[i].content)){
+      const t=list[i].content.find(c=>c.type==='text');t.text='<instructions>\n'+s0+'\n</instructions>\n\nThe image(s) above are attached to this message and you CAN see them. Look at them carefully and answer based on what you actually see.\n\n'+t.text;break;
+    }
+  }
   return {list,vision};
 }
-async function chat(msg,think){
-  const {list,vision}=buildApi();
+const BLIND=/(نمی‌?تونم|نمیتونم|قادر نیستم|امکان ندارد).{0,40}(عکس|تصویر|ببینم)|can'?t (see|view|access)|cannot (see|view)|unable to (see|view)/i;
+async function chat(msg,think,opts={}){
+  const raw=msg.text||'';
+  const fixed=opts.fixed&&norm(opts.fixed)!==norm(raw)?opts.fixed:'';
+  const {list,vision}=buildApi(fixed);
+  const models=vision?VISION_MODELS:[MODEL];
+  let effort=opts.effort||'medium';if(voiceCtx&&effort==='high')effort='medium';
   let w=null,b=null,partial='',raf=false,fin=false;
   const mk=()=>{if(!w){if(think)think.remove();w=mkEl('div','msg asst');b=mkEl('div','ab md');w.appendChild(b);log.appendChild(w);}};
+  const drop=()=>{if(w){w.remove();w=null;b=null;}partial='';};
   try{
-    const full=await groqStream(vision?VISION_MODEL:MODEL,list,{temp:.6,effort:'medium',max:8000},t=>{
-      partial=stripThink(t);if(!partial.trim())return;mk();
-      if(!raf){raf=true;requestAnimationFrame(()=>{raf=false;if(fin)return;renderMD(b,partial,false);scrollDown();});}
-    });
+    let full='';
+    for(let k=0;k<models.length;k++){
+      const last=k===models.length-1;
+      try{
+        full=await groqStream(models[k],list,{temp:.6,effort,max:8000},t=>{
+          partial=stripThink(t);if(!partial.trim())return;mk();
+          if(!raf){raf=true;requestAnimationFrame(()=>{raf=false;if(fin||!b)return;renderMD(b,partial,false);scrollDown();});}
+        });
+        if(vision&&!last&&BLIND.test(stripThink(full))){drop();continue;}
+        break;
+      }catch(e){if(e.name==='AbortError'||last)throw e;drop();}
+    }
     chk();fin=true;
     const reply=stripThink(full).trim()||'ببخشید، جوابی نداشتم. دوباره بپرس.';
     mk();
@@ -693,6 +743,76 @@ async function chat(msg,think){
   }
 }
 
+/* ---------- ساخت و ادیت عکس (Gemini) ---------- */
+function dataParts(url){const m=/^data:([^;]+);base64,(.*)$/.exec(url);return m?{mime:m[1],data:m[2]}:null;}
+function findSourceImage(msg){
+  for(const a of (msg.atts||[]))if(a.type==='image'&&a.full)return a.full;
+  for(let i=cur.messages.length-1;i>=0;i--){
+    const m=cur.messages[i];
+    if(m.role==='assistant'&&(m.imgFull||m.img))return m.imgFull||m.img;
+    for(const a of (m.atts||[]))if(a.type==='image'&&(a.full||a.thumb))return a.full||a.thumb;
+  }
+  return null;
+}
+async function geminiImage(kind,prompt,src){
+  const key=getGeminiKey();
+  const text=kind==='edit'
+    ?'Edit the provided image. Keep everything that was not mentioned exactly the same: the same faces and identity, clothes, pose, lighting, perspective, background and image quality. Make the change look photorealistic and seamlessly blended with the original (matching light, shadows, scale and color). The requested change: '+prompt
+    :'Create a high-quality, detailed image: '+prompt;
+  const parts=[{text}];
+  if(kind==='edit'){const d=dataParts(src);if(!d)throw new Error('bad source image');parts.push({inlineData:{mimeType:d.mime,data:d.data}});}
+  const errs=[];
+  for(const model of ['gemini-2.5-flash-image','gemini-2.5-flash-image-preview']){
+    try{
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key,{method:'POST',signal:sig(),headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{parts}],generationConfig:{responseModalities:['TEXT','IMAGE']}})});
+      if(!r.ok){const e=new Error(r.status+' '+(await r.text()).slice(0,260));e.status=r.status;throw e;}
+      const j=await r.json();
+      const ps=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
+      const img=ps.find(x=>x.inlineData||x.inline_data);
+      if(img){const d=img.inlineData||img.inline_data;return {url:'data:'+(d.mimeType||d.mime_type||'image/png')+';base64,'+d.data};}
+      const e=new Error('no image returned');e.refusal=ps.map(x=>x.text||'').join(' ').trim().slice(0,200);throw e;
+    }catch(e){
+      if(e.name==='AbortError')throw e;
+      if(e.refusal!==undefined||e.status===400||e.status===401||e.status===403)throw e;
+      errs.push(model+': '+String(e.message).slice(0,120));
+      if(model.endsWith('preview'))throw new Error(errs.join(' | '));
+    }
+  }
+}
+function imageFail(e){
+  if(e.refusal)return 'مدل این یکی رو نساخت'+(e.refusal?': '+e.refusal:'')+'. یه جور دیگه توضیح بده تا دوباره امتحان کنم.';
+  const s=e.status;
+  if(s===400&&/API key/i.test(e.message))return 'کلید Gemini درست نیست. از دکمه‌ی کلید یه کلید جدید بذار.';
+  if(s===403)return 'Gemini از این کلید یا منطقه جواب نمی‌ده. VPN رو چک کن و مطمئن شو کلید فعاله.';
+  if(s===429)return 'سهمیه‌ی رایگان ساخت عکس توی Gemini پر شده یا برای کلیدت فعال نیست. بعداً دوباره امتحان کن.';
+  return 'نتونستم عکس رو بسازم. اینترنت و VPN رو چک کن و دوباره بگو.';
+}
+async function makeThumb(url,max){const i=await loadImage(url);return drawScaled(i,i.naturalWidth,i.naturalHeight,max,.75);}
+async function imageTask(kind,prompt,msg){
+  if(!getGeminiKey()){
+    if(SHOW_KEY_BUTTON)openKeySheet();
+    return sayAsst('برای ساختن و ادیت عکس یه کلید رایگان Gemini لازم دارم. از aistudio.google.com/apikey بگیرش و با دکمه‌ی کلید (بالای صفحه) اضافه‌ش کن.');
+  }
+  let src=null;
+  if(kind==='edit'){src=findSourceImage(msg);if(!src)return sayAsst('کدوم عکس؟ یه عکس بفرست تا روش کار کنم.');}
+  const step=startStep(kind==='edit'?'در حال ادیت عکس…':'در حال ساختن عکس…');
+  speak('یه لحظه، دارم روش کار می‌کنم');
+  try{
+    const out=await geminiImage(kind,prompt,src);chk();
+    step.done('عکس آماده شد');
+    ensureChat();
+    const thumb=await makeThumb(out.url,512);
+    const lines=['بفرما، آماده شد.','این شد؛ ببین چطوره.','تموم شد، نظرت چیه؟'];
+    const m={role:'assistant',text:lines[Math.floor(Math.random()*lines.length)],img:thumb,imgFull:out.url,imgPrompt:prompt,sources:[]};
+    cur.messages.push(m);log.appendChild(asstEl(m));updateEmpty();scrollDown();persist();speak(m.text);afterAssistant();
+  }catch(e){
+    if(e.name==='AbortError')throw e;
+    step.fail('کار روی عکس ناموفق بود');
+    return sayAsst(imageFail(e),{err:String(e.message).slice(0,220)});
+  }
+}
+
 /* ---------- پردازش پیام ---------- */
 function parseIntent(s){try{return JSON.parse(s);}catch(e){return {intent:'chat'};}}
 function failText(e){
@@ -706,29 +826,33 @@ async function process(msg){
   if(!getKey()){if(SHOW_KEY_BUTTON)openKeySheet();return sayAsst('برای شروع، کلید Groq رو با دکمه‌ی کلید بالای صفحه وارد کن تا بتونیم حرف بزنیم.');}
   const think=startStep('در حال فکر کردن…');
   try{
-    if((msg.atts||[]).length)return await chat(msg,think);
-    const raw=msg.text||'';
-    if(!askedOptions){const k=fastLocal(raw);if(k){think.remove();return await ACTIONS[k]();}}
+    const raw=msg.text||'',atts=msg.atts||[];
+    const hasMedia=atts.some(a=>a.type==='image'||a.type==='video');
+    if(atts.length&&!(hasMedia&&raw))return await chat(msg,think,{});
+    if(!askedOptions&&!atts.length){const k=fastLocal(raw);if(k){think.remove();return await ACTIONS[k]();}}
     const recent=cur.messages.slice(-5,-1).map(m=>({role:m.role,text:(m.text||'').slice(0,300)}));
-    const res=parseIntent(await groq([{role:'system',content:SYS_INTENT},{role:'user',content:JSON.stringify({text:raw,pending_question_options:askedOptions,recent})}],{json:true}));
+    const res=parseIntent(await groq([{role:'system',content:SYS_INTENT},{role:'user',content:JSON.stringify({text:raw,pending_question_options:askedOptions,recent,has_attachment:hasMedia})}],{json:true,max:900}));
     chk();
     askedOptions=null;
     const p=(res.param||'').trim();
+    const o={fixed:(res.fixed||'').trim(),effort:['low','medium','high'].includes(res.effort)?res.effort:'medium'};
     if(res.intent!=='chat')think.remove();
     switch(res.intent){
       case 'greet':case 'date':case 'time':return await ACTIONS[res.intent]();
       case 'dollar':return await ACTIONS.dollar();
       case 'weather':return await weather(p);
       case 'search':return await search(p||raw,raw);
+      case 'image_edit':return await imageTask('edit',p||raw,msg);
+      case 'image_gen':return await imageTask('gen',p||raw,msg);
       case 'remember':
         if(p){memory.push({id:uid(),text:p});store.set('jv_memory',memory);}
         return await sayAsst('باشه، یادم می‌مونه.');
       case 'ambiguous':{
-        const o=(res.options||[]).filter(x=>LABEL[x]).slice(0,2);
-        if(o.length===2){askedOptions=o;return await sayAsst('ببخشید، منظورت «'+LABEL[o[0]]+'» بود یا «'+LABEL[o[1]]+'»؟');}
+        const op=(res.options||[]).filter(x=>LABEL[x]).slice(0,2);
+        if(op.length===2){askedOptions=op;return await sayAsst('ببخشید، منظورت «'+LABEL[op[0]]+'» بود یا «'+LABEL[op[1]]+'»؟');}
         return await sayAsst('ببخشید، درست نشنیدم. می‌شه دوباره بگی؟');
       }
-      case 'chat':return await chat(msg,think);
+      case 'chat':return await chat(msg,think,o);
       default:return await sayAsst('ببخشید، درست نشنیدم. می‌شه دوباره بگی؟');
     }
   }catch(e){
@@ -791,7 +915,7 @@ function openSettings(){
   <div class="sec">حافظه</div>
   <div id="memList"></div>
   <div class="row"><input id="memNew" placeholder="چیزی که می‌خوای یادش بمونه…"><button id="memAdd" class="btn">اضافه</button></div>
-  ${SHOW_KEY_BUTTON?`<div class="sec">کلید API</div><div class="row"><input id="sKey" type="password" dir="ltr" autocomplete="off" placeholder="${getKey()?'ذخیره شده؛ برای عوض کردن، کلید جدید رو بذار':'gsk_...'}"><button id="sKeySave" class="btn">ذخیره</button></div>`:''}
+  ${SHOW_KEY_BUTTON?`<div class="sec">کلیدها</div><button id="sKeys" class="btn" style="align-self:flex-start">مدیریت کلیدها</button>`:''}
   <div class="sec">داده‌ها</div>
   <button id="sClear" class="btn danger">پاک کردن همه‌ی گفتگوها</button>`;
   $('sTheme').value=s.theme;$('sVoice').checked=s.voiceReplies;$('sSpeed').value=s.speed;$('sWake').checked=s.wake;
@@ -809,25 +933,23 @@ function openSettings(){
   $('sSpeed').oninput=e=>{s.speed=parseFloat(e.target.value);saveSettings();};
   $('sWake').onchange=e=>{s.wake=e.target.checked;saveSettings();wakeSync();};
   $('memAdd').onclick=()=>{const v=$('memNew').value.trim();if(!v)return;memory.push({id:uid(),text:v});store.set('jv_memory',memory);$('memNew').value='';memRender();};
-  if(SHOW_KEY_BUTTON)$('sKeySave').onclick=()=>{
-    const v=$('sKey').value.trim();
-    if(!v.startsWith('gsk_'))return toast('این شبیه کلید Groq نیست؛ باید با gsk_ شروع بشه');
-    try{localStorage.setItem('groqkey',v);}catch(e){return toast('مرورگر اجازه‌ی ذخیره‌ی کلید رو نداد');}
-    $('sKey').value='';$('sKey').placeholder='ذخیره شد ✓';toast('کلید ذخیره شد');
-  };
+  if(SHOW_KEY_BUTTON)$('sKeys').onclick=openKeySheet;
   $('sClear').onclick=()=>{if(confirm('همه‌ی گفتگوها برای همیشه پاک بشن؟')){chats=[];store.set('jv_chats',[]);newChat();$('modal').classList.remove('show');}};
   $('modal').classList.add('show');
 }
 
 function openKeySheet(){
-  $('sheet').innerHTML=`<div class="sht"><b>کلید API</b><button class="ib" id="kClose">${ic('x')}</button></div>
-  <div style="color:var(--mute);font-size:13px">کلید Groq (با gsk_ شروع میشه) فقط توی مرورگر خودت ذخیره میشه.</div>
-  <div class="row"><input id="kIn" type="password" dir="ltr" autocomplete="off" placeholder="${getKey()?'ذخیره شده؛ برای عوض کردن، کلید جدید رو بذار':'gsk_...'}"><button id="kSave" class="btn">ذخیره</button></div>`;
+  $('sheet').innerHTML=`<div class="sht"><b>کلیدها</b><button class="ib" id="kClose">${ic('x')}</button></div>
+  <label class="fl">کلید Groq (چت، شنیدن صدا، دیدن عکس)<div class="row"><input id="kIn" type="password" dir="ltr" autocomplete="off" placeholder="${getKey()?'ذخیره شده ✓ برای عوض کردن، کلید جدید بذار':'gsk_...'}"></div></label>
+  <label class="fl">کلید Gemini (ساخت و ادیت عکس + صدای فارسی). اختیاری، از aistudio.google.com/apikey<div class="row"><input id="kGem" type="password" dir="ltr" autocomplete="off" placeholder="${getGeminiKey()?'ذخیره شده ✓ برای عوض کردن، کلید جدید بذار':'AIza...'}"></div></label>
+  <button id="kSave" class="btn" style="align-self:flex-start">ذخیره</button>`;
   $('kClose').onclick=()=>$('modal').classList.remove('show');
   $('kSave').onclick=()=>{
-    const v=$('kIn').value.trim();
-    if(!v.startsWith('gsk_'))return toast('این شبیه کلید Groq نیست؛ باید با gsk_ شروع بشه');
-    try{localStorage.setItem('groqkey',v);}catch(e){return toast('مرورگر اجازه‌ی ذخیره‌ی کلید رو نداد');}
+    const g=$('kIn').value.trim(),m=$('kGem').value.trim();
+    if(!g&&!m)return toast('چیزی وارد نشده');
+    if(g&&!g.startsWith('gsk_'))return toast('کلید Groq باید با gsk_ شروع بشه');
+    if(m&&!m.startsWith('AIza'))return toast('کلید Gemini باید با AIza شروع بشه');
+    try{if(g)localStorage.setItem('groqkey',g);if(m)localStorage.setItem('geminikey',m);}catch(e){return toast('مرورگر اجازه‌ی ذخیره‌ی کلید رو نداد');}
     $('modal').classList.remove('show');toast('کلید ذخیره شد');
   };
   $('modal').classList.add('show');setTimeout(()=>$('kIn').focus(),50);
@@ -864,7 +986,7 @@ const isText=f=>f.type.startsWith('text/')||/\.(txt|md|csv|json|js|ts|py|html|cs
 async function addFiles(files){
   for(const f of files){
     try{
-      if(f.type.startsWith('image/'))pending.push(await imgAtt(f));
+      if(f.type.startsWith('image/')||(!f.type&&/\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name)))pending.push(await imgAtt(f));
       else if(f.type.startsWith('video/')){toast('دارم ویدیو رو بررسی می‌کنم…');pending.push(await vidAtt(f));}
       else if(isText(f))pending.push({type:'file',name:f.name,text:(await f.text()).slice(0,60000)});
       else toast('این نوع فایل رو هنوز نمی‌تونم بخونم: '+f.name);
@@ -938,6 +1060,8 @@ async function recordAudio({max=15000,silence=1400,noSpeech=7000,onLevel}={}){
 async function whisper(blob){
   const fd=new FormData();
   fd.append('file',blob,'voice.webm');fd.append('model','whisper-large-v3');fd.append('language','fa');fd.append('temperature','0');
+  const la=cur&&[...cur.messages].reverse().find(m=>m.role==='assistant');
+  fd.append('prompt','گفتگوی فارسی با جارویس. '+(la?la.text.replace(/\s+/g,' ').slice(0,140):''));
   const r=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',signal:sig(),headers:{Authorization:'Bearer '+getKey()},body:fd});
   if(!r.ok)throw new Error('whisper '+r.status);
   const t=(await r.json()).text.trim();
@@ -945,43 +1069,78 @@ async function whisper(blob){
   return t;
 }
 
-/* ---------- صدا: خوندن جواب‌ها ---------- */
-let voiceCtx=false,ttsVoice=null,ttsQ=[],ttsBusy=false,ttsAudio=null,ttsEpoch=0;
+/* ---------- صدا: خوندن جواب‌ها (Gemini برای فارسی، یا صدای خود گوشی) ---------- */
+let voiceCtx=false,ttsVoice=null,ttsQ=[],ttsBusy=false,ttsEpoch=0,audioCtx=null,curSrc=null,noVoiceWarned=false;
 function pickVoice(){try{ttsVoice=speechSynthesis.getVoices().find(v=>/^fa/i.test(v.lang))||null;}catch(e){}}
 if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
+function unlockAudio(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();}catch(e){}}
 function chunkText(t){
   const parts=[];let cur='';
-  for(const s of t.split(/(?<=[.!؟?\n])\s*/)){if(!s)continue;if(cur&&(cur+s).length>170){parts.push(cur);cur=s;}else cur+=(cur?' ':'')+s;}
+  for(const s of t.split(/(?<=[.!؟?\n])\s*/)){if(!s)continue;if(cur&&(cur+s).length>300){parts.push(cur);cur=s;}else cur+=(cur?' ':'')+s;}
   if(cur)parts.push(cur);return parts;
 }
 function speak(t){
   if(!voiceCtx||!settings.voiceReplies||!t)return;
-  if(vActive)$('vcap').textContent=t.slice(0,180);
+  if(vActive)$('vcap').textContent=t.slice(0,220);
   ttsQ.push(...chunkText(t));pump();
+}
+function b64Bytes(b){const bin=atob(b),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u;}
+async function geminiTTS(text){
+  const key=getGeminiKey();if(!key)return null;
+  for(const model of ['gemini-2.5-flash-preview-tts','gemini-3.1-flash-tts-preview']){
+    try{
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:[{parts:[{text:'Say in a warm, friendly, natural Persian voice: '+text}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:GEMINI_VOICE}}}}})});
+      if(!r.ok)continue;
+      const j=await r.json();
+      const ps=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
+      const p=ps.find(x=>x.inlineData||x.inline_data);if(!p)continue;
+      const d=p.inlineData||p.inline_data;
+      return {pcm:b64Bytes(d.data),rate:+((/rate=(\d+)/.exec(d.mimeType||d.mime_type||'')||[])[1]||24000)};
+    }catch(e){}
+  }
+  return null;
+}
+function playPCM(a){
+  return new Promise(res=>{
+    unlockAudio();
+    try{
+      const n=a.pcm.length>>1,buf=audioCtx.createBuffer(1,n,a.rate),ch=buf.getChannelData(0),dv=new DataView(a.pcm.buffer,a.pcm.byteOffset,a.pcm.byteLength);
+      for(let i=0;i<n;i++)ch[i]=dv.getInt16(i*2,true)/32768;
+      const src=audioCtx.createBufferSource();src.buffer=buf;src.playbackRate.value=settings.speed;src.connect(audioCtx.destination);
+      curSrc=src;src.onended=()=>res();src.start();
+    }catch(e){res();}
+  });
+}
+function playBrowser(t){
+  return new Promise(res=>{
+    if(!ttsVoice){
+      if(!noVoiceWarned){noVoiceWarned=true;toast(getGeminiKey()?'صدای Gemini جواب نداد؛ متن جواب رو می‌نویسم':'گوشیت صدای فارسی نداره؛ برای صدای فارسی کلید Gemini رو از دکمه‌ی کلید اضافه کن');}
+      return res();
+    }
+    const u=new SpeechSynthesisUtterance(t);u.voice=ttsVoice;u.lang=ttsVoice.lang;u.rate=settings.speed;
+    let d=false;const f=()=>{if(!d){d=true;res();}};u.onend=f;u.onerror=f;setTimeout(f,25000);
+    try{speechSynthesis.speak(u);}catch(e){f();}
+  });
 }
 async function pump(){
   if(ttsBusy)return;ttsBusy=true;const ep=ttsEpoch;
-  while(ttsQ.length&&ep===ttsEpoch){if(vActive)setVoiceUI('speak');await playChunk(ttsQ.shift());}
+  let cache=null;
+  const prep=t=>getGeminiKey()?geminiTTS(t):Promise.resolve(null);
+  while(ep===ttsEpoch&&ttsQ.length){
+    const t=ttsQ.shift();
+    const a=await (cache||prep(t));cache=null;
+    if(ep!==ttsEpoch)break;
+    if(ttsQ.length)cache=prep(ttsQ[0]);
+    if(vActive)setVoiceUI('speak');
+    if(a)await playPCM(a);else await playBrowser(t);
+  }
   if(ep===ttsEpoch)ttsBusy=false;
-}
-function playChunk(t){
-  return new Promise(res=>{
-    if(ttsVoice){
-      const u=new SpeechSynthesisUtterance(t);u.voice=ttsVoice;u.lang=ttsVoice.lang;u.rate=settings.speed;
-      let d=false;const f=()=>{if(!d){d=true;res();}};u.onend=f;u.onerror=f;setTimeout(f,25000);
-      try{speechSynthesis.speak(u);}catch(e){f();}
-    }else{
-      const a=new Audio('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=fa&q='+encodeURIComponent(t));
-      a.playbackRate=settings.speed;ttsAudio=a;
-      a.onended=()=>res();a.onerror=()=>res();
-      a.play().catch(()=>res());
-    }
-  });
 }
 function stopSpeech(){
   ttsEpoch++;ttsQ=[];ttsBusy=false;
   try{speechSynthesis.cancel();}catch(e){}
-  if(ttsAudio){try{ttsAudio.pause();}catch(e){}ttsAudio=null;}
+  if(curSrc){try{curSrc.onended=null;curSrc.stop();}catch(e){}curSrc=null;}
 }
 function waitSpeech(){return new Promise(r=>{const iv=setInterval(()=>{if(!ttsBusy&&!ttsQ.length){clearInterval(iv);r();}},120);});}
 
@@ -991,6 +1150,8 @@ function setVoiceUI(state,cap){const v=$('vo');v.className='vo show '+(state||''
 function startVoice(){
   if(!getKey()){if(SHOW_KEY_BUTTON)openKeySheet();return;}
   if(vActive)return;
+  unlockAudio();
+  if(!ttsVoice&&!getGeminiKey()&&!noVoiceWarned){noVoiceWarned=true;toast('گوشیت صدای فارسی نداره؛ جواب‌ها رو می‌نویسم. برای صدای فارسی، کلید Gemini رو از دکمه‌ی کلید اضافه کن');}
   vActive=true;wakeSync();setVoiceUI('listen','');voiceLoop();
 }
 function endVoice(){
@@ -1084,3 +1245,4 @@ applyTheme();newChat();wakeSync();
 </script>
 </body>
 </html>
+
