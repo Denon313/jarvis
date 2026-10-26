@@ -1,129 +1,168 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl" data-theme="auto">
+<html lang="fa" dir="rtl" translate="no" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
-<title>جارویس</title>
+<meta name="google" content="notranslate">
+<title>JARVIS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#faf9f5;--side:#f3f1ea;--text:#1f1e1d;--mute:#73726c;--line:#e6e3d8;--bubble:#efece3;--accent:#d97757;--card:#fff;--hover:#ebe8de;--ok:#4f8a5b;--bad:#c0504d;--shadow:0 2px 14px rgba(40,30,20,.07)}
-:root[data-theme=dark]{--bg:#262624;--side:#1f1e1d;--text:#eceae4;--mute:#a3a198;--line:#3d3c39;--bubble:#393835;--card:#30302e;--hover:#33322f;--ok:#8fc08f;--bad:#e08a86;--shadow:0 2px 14px rgba(0,0,0,.35)}
-@media (prefers-color-scheme:dark){:root[data-theme=auto]{--bg:#262624;--side:#1f1e1d;--text:#eceae4;--mute:#a3a198;--line:#3d3c39;--bubble:#393835;--card:#30302e;--hover:#33322f;--ok:#8fc08f;--bad:#e08a86;--shadow:0 2px 14px rgba(0,0,0,.35)}}
+:root{--bg:#030507;--side:rgba(7,11,17,.86);--text:#dce9f2;--mute:#7f93a3;--line:rgba(25,227,255,.16);--bubble:rgba(25,227,255,.075);--accent:#19e3ff;--accent2:#8b5cff;--card:rgba(9,15,22,.80);--hover:rgba(25,227,255,.09);--ok:#37f0a0;--bad:#ff5d73;--onaccent:#021014;--glow:0 0 22px rgba(25,227,255,.28)}
+:root[data-theme=light]{--bg:#f1f6f8;--side:rgba(255,255,255,.88);--text:#0d1b24;--mute:#5d7280;--line:rgba(0,120,150,.22);--bubble:rgba(0,150,190,.09);--accent:#0891b2;--accent2:#6d4aff;--card:rgba(255,255,255,.92);--hover:rgba(0,150,190,.10);--ok:#16a34a;--bad:#dc2626;--onaccent:#fff;--glow:0 0 16px rgba(8,145,178,.16)}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{font-family:Vazirmatn,system-ui,-apple-system,Tahoma,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;-webkit-tap-highlight-color:transparent}
+body{font-family:Vazirmatn,system-ui,-apple-system,Tahoma,sans-serif;color:var(--text);overflow:hidden;-webkit-tap-highlight-color:transparent;
+ background:radial-gradient(900px 520px at 88% -12%,rgba(25,227,255,.11),transparent 60%),radial-gradient(760px 520px at -12% 112%,rgba(139,92,255,.11),transparent 60%),var(--bg)}
+:root[data-theme=light] body{background:radial-gradient(900px 520px at 88% -12%,rgba(8,145,178,.10),transparent 60%),var(--bg)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(25,227,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(25,227,255,.04) 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 25%,transparent 78%);mask-image:radial-gradient(ellipse at 50% 40%,#000 25%,transparent 78%)}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:rgba(25,227,255,.25);border-radius:6px}
 button{border:0;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;color:inherit;background:none}
 input,textarea,select{font-family:inherit}
 svg{display:block}
-#app{display:flex;height:100dvh}
-#side{width:290px;flex:none;background:var(--side);border-inline-end:1px solid var(--line);display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom));gap:8px;transition:transform .25s}
+#app{display:flex;height:100dvh;position:relative;z-index:1}
+#side{width:290px;flex:none;background:var(--side);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-inline-end:1px solid var(--line);display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom));gap:8px;transition:transform .25s}
 .sh{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 6px}
-.brand{display:flex;align-items:center;gap:8px;font-family:Georgia,Vazirmatn,serif;font-size:21px}
-.logo{width:24px;height:24px;color:var(--accent)}
-.logo svg{width:24px;height:24px}
-.newbtn{gap:8px;justify-content:flex-start;padding:10px 12px;border-radius:12px;font-size:15px;color:var(--accent);font-weight:500}
-.newbtn:hover{background:var(--hover)}
+.brand{display:flex;align-items:center;gap:10px}
+.bt{font-family:Orbitron,system-ui,sans-serif;font-weight:800;letter-spacing:.28em;font-size:15px;color:#eafcff;text-shadow:0 0 14px rgba(25,227,255,.7)}
+:root[data-theme=light] .bt{color:var(--accent);text-shadow:none}
+.logo{width:26px;height:26px;color:var(--accent);filter:drop-shadow(0 0 7px var(--accent))}
+.logo svg{width:26px;height:26px}
+.newbtn{gap:8px;justify-content:flex-start;padding:10px 12px;border-radius:12px;font-size:15px;color:var(--accent);font-weight:500;border:1px solid var(--line)}
+.newbtn:hover{background:var(--hover);box-shadow:var(--glow)}
 .newbtn svg{width:20px;height:20px}
 .hsearch{margin:0 2px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:8px 12px;font-size:14px;outline:none}
+.hsearch:focus{border-color:var(--accent)}
 #hist{flex:1;overflow-y:auto;padding-top:4px}
-.hg{font-size:12px;color:var(--mute);padding:12px 12px 4px}
-.hi{display:flex;align-items:center;gap:2px;padding:2px 4px 2px 8px;border-radius:10px;cursor:pointer}
-.hi:hover,.hi.on{background:var(--hover)}
+.hg{font-size:11.5px;color:var(--mute);padding:12px 12px 4px;letter-spacing:.04em}
+.hi{display:flex;align-items:center;gap:2px;padding:2px 4px 2px 8px;border-radius:10px;cursor:pointer;border-inline-start:2px solid transparent}
+.hi:hover{background:var(--hover)}
+.hi.on{background:var(--hover);border-inline-start-color:var(--accent);box-shadow:inset 0 0 18px rgba(25,227,255,.06)}
 .hi span{flex:1;min-width:0;padding:8px 6px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hi button{width:28px;height:28px;border-radius:8px;color:var(--mute);opacity:.55}
 .hi button:hover{opacity:1;background:var(--line)}
 .hi svg{width:15px;height:15px}
-.prof{gap:10px;padding:8px;border-radius:12px;justify-content:flex-start;text-align:start;width:100%}
-.prof:hover{background:var(--hover)}
-.av{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.prof{gap:10px;padding:8px;border-radius:12px;justify-content:flex-start;text-align:start;width:100%;border:1px solid transparent}
+.prof:hover{background:var(--hover);border-color:var(--line)}
+.av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--onaccent);display:flex;align-items:center;justify-content:center;font-weight:700}
 .pn{flex:1;display:flex;flex-direction:column;line-height:1.4;font-size:14px}
-.pn small{color:var(--mute);font-size:12px;font-family:system-ui,sans-serif}
+.pn small{color:var(--accent);font-size:10.5px;font-family:Orbitron,system-ui,sans-serif;letter-spacing:.14em}
 .prof svg{width:20px;height:20px;color:var(--mute)}
 #scrim{display:none}
 #main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}
-#top{position:absolute;top:0;inset-inline:0;z-index:5;display:flex;align-items:center;gap:6px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;pointer-events:none}
+#top{position:absolute;top:0;inset-inline:0;z-index:5;display:flex;align-items:center;gap:6px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;pointer-events:none;background:linear-gradient(180deg,rgba(3,5,7,.78),rgba(3,5,7,0))}
+:root[data-theme=light] #top{background:linear-gradient(180deg,rgba(241,246,248,.9),rgba(241,246,248,0))}
 #top>*{pointer-events:auto}
-#ttl{flex:1;text-align:center;font-size:14px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#brandWrap{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}
+#brandTop{font-family:Orbitron,system-ui,sans-serif;font-weight:800;letter-spacing:.5em;padding-inline-start:.5em;font-size:16px;color:#eafcff;text-shadow:0 0 12px rgba(25,227,255,.9),0 0 30px rgba(25,227,255,.45)}
+:root[data-theme=light] #brandTop{color:var(--accent);text-shadow:none}
+#ttl{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-height:15px}
 #menuBtn{display:none}
 #wakeInd{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--accent)}
 #wakeInd[hidden]{display:none}
-#wakeInd i{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.4s ease-in-out infinite}
+#wakeInd i{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 1.4s ease-in-out infinite}
 .ib{width:38px;height:38px;border-radius:10px;color:var(--mute);flex:none}
-.ib:hover{background:var(--hover);color:var(--text)}
+.ib:hover{background:var(--hover);color:var(--accent)}
 .ib svg{width:20px;height:20px}
-#home{display:none;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:0 20px 14px}
-#home .mark{width:46px;height:46px;color:var(--accent)}
-#home .mark svg{width:46px;height:46px}
-#home h2{margin:0;font-weight:500;font-size:clamp(26px,5.5vw,38px);font-family:Georgia,Vazirmatn,serif}
+#home{display:none;flex-direction:column;align-items:center;text-align:center;gap:14px;padding:0 20px 16px}
+.mark{position:relative;width:86px;height:86px;display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.mark .brain svg{width:44px;height:44px;filter:drop-shadow(0 0 10px var(--accent))}
+.mark::before,.mark::after{content:"";position:absolute;border-radius:50%;pointer-events:none}
+.mark::before{inset:0;border:1px dashed rgba(25,227,255,.5);animation:spin 16s linear infinite}
+.mark::after{inset:10px;border:1px solid transparent;border-top-color:var(--accent);border-bottom-color:var(--accent2);animation:spin 5s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sys{display:flex;align-items:center;gap:8px;font-family:Orbitron,system-ui,sans-serif;font-size:11px;letter-spacing:.3em;color:var(--accent)}
+.sys i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);animation:pulse 1.8s ease-in-out infinite}
+#home h2{margin:0;font-weight:500;font-size:clamp(26px,5.5vw,38px);background:linear-gradient(90deg,#ffffff,#8fefff 60%,#b9a4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+:root[data-theme=light] #home h2{background:none;color:var(--text)}
 body.empty #home{display:flex}
 body.empty #scroller{display:none}
 body.empty #main{justify-content:center}
-#scroller{flex:1;overflow-y:auto;padding:64px 0 14px}
+#scroller{flex:1;overflow-y:auto;padding:70px 0 14px}
 #log{width:100%;max-width:760px;margin:0 auto;padding:0 18px;display:flex;flex-direction:column;gap:22px}
-.msg{display:flex;flex-direction:column;gap:6px;animation:in .25s ease}
+.msg{display:flex;flex-direction:column;gap:6px;animation:in .28s ease}
 .msg.user{align-items:flex-start}
-.ub{background:var(--bubble);padding:10px 16px;border-radius:20px;max-width:88%;white-space:pre-wrap;line-height:1.9;font-size:16px;word-break:break-word}
+.ub{background:var(--bubble);border:1px solid var(--line);padding:10px 16px;border-radius:18px;max-width:88%;white-space:pre-wrap;line-height:1.9;font-size:16px;word-break:break-word}
 .uatts{display:flex;flex-wrap:wrap;gap:8px;max-width:88%}
 .uimg{width:120px;height:120px;object-fit:cover;border-radius:14px;border:1px solid var(--line)}
 .fchip{background:var(--bubble);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:13px}
-.ab{font-family:Georgia,Vazirmatn,system-ui,serif;font-size:16.5px;line-height:2;word-break:break-word}
-.acts{display:flex;gap:2px;opacity:.6}
+.ab{font-size:16.5px;line-height:2;word-break:break-word}
+.acts{display:flex;gap:2px;opacity:.55}
 .acts button{width:30px;height:30px;border-radius:8px;color:var(--mute)}
-.acts button:hover{background:var(--hover);color:var(--text)}
+.acts button:hover{background:var(--hover);color:var(--accent)}
 .acts svg{width:16px;height:16px}
 .msg:hover .acts{opacity:1}
 .src{display:flex;flex-wrap:wrap;gap:6px}
 .src a,.gbtn{font-size:12.5px;color:var(--mute);border:1px solid var(--line);border-radius:999px;padding:4px 12px;text-decoration:none;background:var(--card);font-family:system-ui,sans-serif}
-.src a:hover,.gbtn:hover{color:var(--text);background:var(--hover)}
+.src a:hover,.gbtn:hover{color:var(--accent);box-shadow:var(--glow)}
 .gbtn{align-self:flex-start;font-family:inherit;color:var(--accent)}
+.note{font-size:12px;color:var(--mute)}
 .errd{font-size:12px;color:var(--mute);direction:ltr;text-align:left;font-family:ui-monospace,monospace;word-break:break-all}
-.step{display:flex;align-items:center;gap:9px;color:var(--mute);font-size:14px;animation:in .25s ease}
-.step .ic{width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;flex:none}
-.step .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
-.step.run .t{background:linear-gradient(90deg,var(--mute) 30%,var(--text) 50%,var(--mute) 70%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 1.8s linear infinite}
+.step{display:flex;align-items:center;gap:8px;color:var(--mute);font-size:14px;animation:in .25s ease}
+.step .ic{width:30px;height:24px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.step.run .t{background:linear-gradient(90deg,var(--mute) 30%,var(--accent) 50%,var(--mute) 70%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 1.8s linear infinite}
 .step.ok .ic{color:var(--ok)}.step.fail .ic{color:var(--bad)}
+.orbit{position:relative;display:block;width:26px;height:20px}
+.orbit i{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe2c9,#ff8a3d 55%,#b8470f);box-shadow:0 0 6px rgba(255,138,61,.9),0 0 14px rgba(255,138,61,.45);animation:orb 1.5s linear infinite}
+.orbit i:nth-child(2){animation-delay:-.5s}.orbit i:nth-child(3){animation-delay:-1s}
+@keyframes orb{
+ 0%{transform:translate(10px,0) scale(1);opacity:1}
+ 12.5%{transform:translate(7px,3px) scale(1.2);opacity:1}
+ 25%{transform:translate(0,4.5px) scale(1.4);opacity:1}
+ 37.5%{transform:translate(-7px,3px) scale(1.2);opacity:1}
+ 50%{transform:translate(-10px,0) scale(1);opacity:.9}
+ 62.5%{transform:translate(-7px,-3px) scale(.75);opacity:.6}
+ 75%{transform:translate(0,-4.5px) scale(.55);opacity:.4}
+ 87.5%{transform:translate(7px,-3px) scale(.75);opacity:.6}
+ 100%{transform:translate(10px,0) scale(1);opacity:1}}
 @keyframes shine{from{background-position:200% 0}to{background-position:-200% 0}}
-@keyframes pulse{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
+@keyframes pulse{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1.1)}}
 @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .md p{margin:0 0 12px}.md p:last-child{margin-bottom:0}
-.md h4{margin:16px 0 6px;font-size:17px}
+.md h4{margin:16px 0 6px;font-size:17px;color:#eafcff}
+:root[data-theme=light] .md h4{color:var(--text)}
 .md ul,.md ol{margin:0 0 12px;padding-inline-start:26px}
 .md li{margin-bottom:4px}
 .md a{color:var(--accent)}
-.md blockquote{margin:0 0 12px;padding:2px 14px;border-inline-start:3px solid var(--line);color:var(--mute)}
-.md :not(pre)>code{background:var(--bubble);padding:1px 6px;border-radius:6px;font-size:.88em;direction:ltr;unicode-bidi:isolate;font-family:ui-monospace,Menlo,Consolas,monospace}
+.md blockquote{margin:0 0 12px;padding:2px 14px;border-inline-start:3px solid var(--accent);color:var(--mute)}
+.md :not(pre)>code{background:var(--bubble);border:1px solid var(--line);padding:1px 6px;border-radius:6px;font-size:.88em;direction:ltr;unicode-bidi:isolate;font-family:ui-monospace,Menlo,Consolas,monospace}
 .tw{overflow-x:auto;margin:0 0 12px}
 .md table{border-collapse:collapse;font-size:14.5px}
 .md th,.md td{border:1px solid var(--line);padding:6px 12px}
 .md th{background:var(--bubble)}
-.code{margin:12px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card);font-family:system-ui,sans-serif}
-.ch{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;font-size:12px;color:var(--mute);border-bottom:1px solid var(--line);direction:ltr}
+.code{margin:12px 0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:rgba(0,0,0,.35);font-family:system-ui,sans-serif;box-shadow:0 0 0 1px rgba(25,227,255,.04),var(--glow)}
+:root[data-theme=light] .code{background:#fff}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;font-size:12px;color:var(--mute);border-bottom:1px solid var(--line);direction:ltr;background:var(--bubble)}
 .cb{display:flex;gap:2px;direction:rtl}
 .cb button{color:var(--accent);font-size:13px;padding:4px 10px;border-radius:8px}
-.cb button:hover{background:var(--bubble)}
+.cb button:hover{background:var(--hover)}
 .code pre{margin:0;padding:12px 14px;overflow-x:auto;direction:ltr;text-align:left;font-size:13px;line-height:1.65;font-family:ui-monospace,Menlo,Consolas,monospace}
 .pv{display:block;width:100%;height:340px;border:0;border-top:1px solid var(--line);background:#fff}
 .ov{position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;flex-direction:column}
-.ov .ob{display:flex;justify-content:flex-end;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;border-bottom:1px solid var(--line)}
-.ov .ob button{background:var(--accent);color:#fff;border-radius:10px;padding:8px 16px;font-size:14px}
+.ov .ob{display:flex;justify-content:flex-end;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;border-bottom:1px solid var(--line)}
+.ov .ob button{background:var(--accent);color:var(--onaccent);border-radius:10px;padding:8px 16px;font-size:14px}
+.ov .ob a{background:var(--bubble);color:var(--text);border-radius:10px;padding:8px 16px;font-size:14px;text-decoration:none}
 .ov iframe{flex:1;border:0;background:#fff;width:100%}
+.ov img{flex:1;min-height:0;object-fit:contain;background:#000}
+.gimg{display:block;max-width:min(100%,440px);border-radius:16px;border:1px solid var(--line);cursor:zoom-in;margin-bottom:8px;box-shadow:var(--glow)}
 #composerWrap{width:100%;max-width:760px;margin:0 auto;padding:6px 14px calc(8px + env(safe-area-inset-bottom))}
-#composer{background:var(--card);border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow);padding:10px 12px 8px;display:flex;flex-direction:column;gap:6px;transition:border-color .15s}
-#composer:focus-within{border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}
+#composer{background:var(--card);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:24px;padding:10px 12px 8px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,box-shadow .2s;box-shadow:0 0 0 1px rgba(25,227,255,.03),0 8px 30px rgba(0,0,0,.35)}
+#composer:focus-within{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 26px rgba(25,227,255,.25),0 8px 30px rgba(0,0,0,.35)}
 #txt{width:100%;border:0;outline:0;background:transparent;color:var(--text);font-size:16px;line-height:1.8;resize:none;max-height:220px;padding:2px 6px;min-height:30px}
 #txt::placeholder{color:var(--mute)}
 .crow{display:flex;align-items:center;gap:4px}
 .crow .sp{flex:1}
-.ver{font-size:12.5px;color:var(--mute);padding:5px 10px;border-radius:10px;font-family:system-ui,sans-serif}
-#primary{width:36px;height:36px;border-radius:50%;flex:none}
+.ver{font-family:Orbitron,system-ui,sans-serif;font-size:10.5px;letter-spacing:.18em;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:5px 11px;margin-inline:4px;text-shadow:0 0 8px rgba(25,227,255,.5)}
+:root[data-theme=light] .ver{text-shadow:none}
+#primary{width:38px;height:38px;border-radius:50%;flex:none;transition:transform .15s,box-shadow .2s}
+#primary:active{transform:scale(.92)}
 #primary svg{width:18px;height:18px}
-#primary[data-mode=send],#primary[data-mode=stop]{background:var(--accent);color:#fff}
-#primary[data-mode=voice]{background:var(--text);color:var(--bg)}
+#primary[data-mode=send],#primary[data-mode=stop]{background:linear-gradient(135deg,var(--accent),#2f7bff);color:var(--onaccent);box-shadow:0 0 18px rgba(25,227,255,.5)}
+#primary[data-mode=voice]{background:transparent;color:var(--accent);border:1px solid var(--accent);box-shadow:0 0 14px rgba(25,227,255,.3)}
 #mic.rec{color:#fff;background:var(--bad);animation:pulse 1.2s ease-in-out infinite}
 #mic.busy{opacity:.5}
-.foot{text-align:center;font-size:12px;color:var(--mute);padding:8px 8px 0}
+.foot{text-align:center;font-size:11.5px;color:var(--mute);padding:8px 8px 0}
 #atts{display:flex;flex-wrap:wrap;gap:8px}
 #atts:empty{display:none}
 .att{position:relative;display:flex;align-items:center;gap:8px;background:var(--bubble);border:1px solid var(--line);border-radius:12px;padding:5px 8px;font-size:13px;max-width:210px}
@@ -131,42 +170,46 @@ body.empty #main{justify-content:center}
 .att span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .att button{width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--text)}
 .att button svg{width:12px;height:12px}
-.modal{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.42);display:none;align-items:center;justify-content:center;padding:14px}
+.modal{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.62);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:14px}
 .modal.show{display:flex}
-.sheet{background:var(--bg);width:100%;max-width:560px;max-height:88dvh;overflow:auto;border-radius:20px;border:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:12px}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:88dvh;overflow:auto;border-radius:20px;border:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--glow)}
 .sht{display:flex;align-items:center;justify-content:space-between;font-size:18px}
-.sec{font-size:13px;color:var(--mute);margin-top:8px;border-top:1px solid var(--line);padding-top:12px}
+.sec{font-size:12px;color:var(--accent);margin-top:8px;border-top:1px solid var(--line);padding-top:12px;letter-spacing:.06em}
 .fl{display:flex;flex-direction:column;gap:6px;font-size:14px}
 .fl input,.fl textarea,.fl select,.row input{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:10px 12px;font-size:15px;outline:none}
+.fl input:focus,.fl textarea:focus,.fl select:focus,.row input:focus{border-color:var(--accent)}
+.fl select option{background:#0b1218;color:#dce9f2}
 .fl input[type=range]{padding:0}
 .chk{display:flex;align-items:center;gap:10px;font-size:14px}
+.chk input{accent-color:var(--accent)}
 .row{display:flex;gap:8px}
 .row input{flex:1;min-width:0}
-.btn{background:var(--accent);color:#fff;border-radius:12px;padding:9px 16px;font-size:14px}
+.btn{background:linear-gradient(135deg,var(--accent),#2f7bff);color:var(--onaccent);border-radius:12px;padding:9px 16px;font-size:14px;font-weight:500}
 .btn.danger{background:transparent;color:var(--bad);border:1px solid var(--line);align-self:flex-start}
-.mi{display:flex;align-items:center;gap:8px;background:var(--bubble);border-radius:12px;padding:8px 12px;font-size:14px;margin-bottom:6px}
+.vstat{font-size:12.5px;color:var(--mute);min-height:18px;direction:ltr;text-align:left;word-break:break-all}
+.mi{display:flex;align-items:center;gap:8px;background:var(--bubble);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:14px;margin-bottom:6px}
 .mi span{flex:1}
 .mi button{color:var(--mute)}
 .mi svg{width:16px;height:16px}
-.vo{position:fixed;inset:0;z-index:60;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:24px;text-align:center}
+.vo{position:fixed;inset:0;z-index:60;background:radial-gradient(700px 500px at 50% 45%,rgba(25,227,255,.10),transparent 65%),var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:30px;padding:24px;text-align:center}
 .vo.show{display:flex}
 .vx{position:absolute;top:calc(12px + env(safe-area-inset-top));inset-inline-end:14px}
-.vorb{width:170px;height:170px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f2b49c,var(--accent) 55%,#b9532f);box-shadow:0 0 60px rgba(217,119,87,.35);transform:scale(calc(1 + var(--lvl,0)*1.2));transition:transform .08s linear;cursor:pointer}
+.vwrap{position:relative;width:200px;height:200px;display:flex;align-items:center;justify-content:center}
+.vwrap::before,.vwrap::after{content:"";position:absolute;border-radius:50%;pointer-events:none}
+.vwrap::before{inset:0;border:1px dashed rgba(25,227,255,.45);animation:spin 18s linear infinite}
+.vwrap::after{inset:14px;border:1px solid transparent;border-top-color:var(--accent);border-bottom-color:var(--accent2);animation:spin 6s linear infinite reverse}
+.vo.think .vwrap::after{animation-duration:1.4s}
+.vorb{width:128px;height:128px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#b8f7ff,var(--accent) 45%,#1b5bff 100%);box-shadow:0 0 70px rgba(25,227,255,.55),inset 0 0 30px rgba(255,255,255,.25);transform:scale(calc(1 + var(--lvl,0)*1.3));transition:transform .08s linear;cursor:pointer}
 .vo.think .vorb,.vo.speak .vorb{animation:breath 1.5s ease-in-out infinite;transform:none}
 @keyframes breath{0%,100%{transform:scale(.94)}50%{transform:scale(1.08)}}
-#vcap{min-height:56px;max-width:560px;font-size:18px;line-height:1.9;font-family:Georgia,Vazirmatn,serif}
-.vhint{font-size:13px;color:var(--mute)}
-#toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:90;max-width:90vw}
+#vcap{min-height:56px;max-width:560px;font-size:18px;line-height:1.9}
+.vhint{font-size:12.5px;color:var(--mute)}
+#toast{position:fixed;bottom:calc(96px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--accent);color:var(--text);padding:10px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:90;max-width:90vw;box-shadow:var(--glow)}
 #toast.show{opacity:1}
-
-.gimg{display:block;max-width:min(100%,440px);border-radius:16px;border:1px solid var(--line);cursor:zoom-in;margin-bottom:8px}
-.ov img{flex:1;min-height:0;object-fit:contain;background:#000}
-.ov .ob{gap:8px}
-.ov .ob a{background:var(--bubble);color:var(--text);border-radius:10px;padding:8px 16px;font-size:14px;text-decoration:none}
 @media (max-width:820px){
   #side{position:fixed;inset-block:0;inset-inline-start:0;z-index:40;transform:translateX(100%);width:min(310px,86vw)}
   body.menu #side{transform:none}
-  body.menu #scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:30}
+  body.menu #scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:30}
   #menuBtn{display:inline-flex}
 }
 </style>
@@ -174,16 +217,16 @@ body.empty #main{justify-content:center}
 <body class="empty">
 <div id="app">
  <aside id="side">
-  <div class="sh"><div class="brand"><span class="logo" data-ic="spark"></span><span>جارویس</span></div><button class="ib" id="sideClose" data-ic="x" aria-label="بستن"></button></div>
+  <div class="sh"><div class="brand"><span class="logo" data-ic="brain"></span><span class="bt">JARVIS</span></div><button class="ib" id="sideClose" data-ic="x" aria-label="بستن"></button></div>
   <button id="newChat" class="newbtn"><span data-ic="plus"></span>گفتگوی جدید</button>
   <input id="hsearch" class="hsearch" placeholder="جستجوی گفتگوها…">
   <div id="hist"></div>
-  <button id="profile" class="prof"><span class="av" id="av">؟</span><span class="pn"><b id="pname">تنظیمات</b><small>Jarvis 1.0</small></span><span data-ic="gear"></span></button>
+  <button id="profile" class="prof"><span class="av" id="av">؟</span><span class="pn"><b id="pname">تنظیمات</b><small>JARVIS 2.0</small></span><span data-ic="gear"></span></button>
  </aside>
  <div id="scrim"></div>
  <main id="main">
-  <div id="top"><button class="ib" id="menuBtn" data-ic="menu" aria-label="منو"></button><div id="ttl"></div><span id="wakeInd" hidden><i></i>هی جارویس</span><button class="ib" id="keyTop" data-ic="key" aria-label="کلید API"></button><button class="ib" id="topNew" data-ic="edit" aria-label="گفتگوی جدید"></button></div>
-  <div id="home"><div class="mark" data-ic="spark"></div><h2 id="greet"></h2></div>
+  <div id="top"><button class="ib" id="menuBtn" data-ic="menu" aria-label="منو"></button><div id="brandWrap"><div id="brandTop">JARVIS</div><div id="ttl"></div></div><span id="wakeInd" hidden><i></i>هی جارویس</span><button class="ib" id="keyTop" data-ic="key" aria-label="کلید API"></button><button class="ib" id="topNew" data-ic="edit" aria-label="گفتگوی جدید"></button></div>
+  <div id="home"><div class="mark"><span class="brain" data-ic="brain"></span></div><div class="sys"><i></i>JARVIS 2.0 · ONLINE</div><h2 id="greet"></h2></div>
   <div id="scroller"><div id="log"></div></div>
   <div id="composerWrap">
    <div id="composer">
@@ -192,7 +235,7 @@ body.empty #main{justify-content:center}
     <div class="crow">
      <button class="ib" id="plus" data-ic="plus" aria-label="پیوست"></button>
      <span class="sp"></span>
-     <span class="ver">Jarvis 1.0</span>
+     <span class="ver">JARVIS 2.0</span>
      <button class="ib" id="mic" data-ic="mic" aria-label="تایپ با صدا"></button>
      <button id="primary" data-mode="voice" aria-label="ارسال"></button>
     </div>
@@ -203,16 +246,15 @@ body.empty #main{justify-content:center}
 </div>
 <input type="file" id="file" multiple hidden accept="image/*,video/*,text/*,.md,.csv,.json,.js,.ts,.py,.html,.css,.xml,.yml,.yaml,.java,.c,.cpp,.cs,.go,.rs,.php,.sql,.sh,.log">
 <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
-<div class="vo" id="vo"><button class="ib vx" id="vEnd" data-ic="x" aria-label="پایان"></button><div class="vorb" id="vorb"></div><div id="vcap"></div><div class="vhint">برای قطع کردن حرفم یا شروع صحبت، روی دایره بزن</div></div>
+<div class="vo" id="vo"><button class="ib vx" id="vEnd" data-ic="x" aria-label="پایان"></button><div class="vwrap"><div class="vorb" id="vorb"></div></div><div id="vcap"></div><div class="vhint" id="vhint">برای قطع کردن حرفم یا شروع صحبت، روی دایره بزن</div></div>
 <div id="toast"></div>
 <script>
 'use strict';
 const SHOW_KEY_BUTTON=true; // false = بخش کلید از تنظیمات مخفی میشه (منطق API دست نمی‌خوره)
 const GROQ_KEY='';
 const MODEL='openai/gpt-oss-120b';
-const VISION_MODELS=['qwen/qwen3.6-27b','qwen/qwen3.8-27b'];
 const GEMINI_KEY='';
-const GEMINI_VOICE='Kore';
+const VOICES=[['Charon','عمیق و رسمی'],['Orus','محکم'],['Achird','صمیمی'],['Zubenelgenubi','راحت'],['Iapetus','شفاف'],['Schedar','یکدست'],['Puck','شاد'],['Fenrir','پرانرژی']];
 const $=id=>document.getElementById(id);
 
 /* ---------- آیکون‌ها ---------- */
@@ -230,6 +272,8 @@ const ICON={
   edit:S+'<path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>',
   gear:S+'<circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg>',
   trash:S+'<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg>',
+  brain:S+'<path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/></svg>',
+  speaker:S+'<path d="M5 9v6h4l5 4V5L9 9H5z"/><path d="M17.5 8.5a5 5 0 0 1 0 7M20 6a8.5 8.5 0 0 1 0 12"/></svg>',
   spark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.8 5.2 4.8 9.2 10 10-5.2.8-9.2 4.8-10 10-.8-5.2-4.8-9.2-10-10 5.2-.8 9.2-4.8 10-10z"/></svg>',
   key:S+'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg>',
   download:S+'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>',
@@ -242,14 +286,15 @@ document.querySelectorAll('[data-ic]').forEach(e=>{e.innerHTML=ic(e.dataset.ic);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}};
 function getKey(){let k='';try{k=localStorage.getItem('groqkey')||'';}catch(e){}k=k||GROQ_KEY;return k.startsWith('gsk_')?k:'';}
 function getGeminiKey(){let k='';try{k=localStorage.getItem('geminikey')||'';}catch(e){}k=k||GEMINI_KEY;return k.startsWith('AIza')?k:'';}
-const settings=Object.assign({name:'',instructions:'',theme:'auto',voiceReplies:true,wake:false,speed:1},store.get('jv_settings',{}));
+const settings=Object.assign({name:'',instructions:'',theme:'dark',voiceReplies:true,readAll:false,voiceName:'Charon',speechLang:'auto',wake:false,speed:1},store.get('jv_settings',{}));
+if(settings.theme!=='light')settings.theme='dark';
 let memory=store.get('jv_memory',[]);
 let chats=store.get('jv_chats',[]);
 let cur=null,pending=[],askedOptions=null;
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 function saveSettings(){store.set('jv_settings',settings);}
 function serialize(){
-  return chats.map(c=>({id:c.id,title:c.title,updated:c.updated,titled:c.titled,messages:c.messages.map(m=>({role:m.role,text:m.text,sources:m.sources,google:m.google,err:m.err,img:m.img,imgPrompt:m.imgPrompt,
+  return chats.map(c=>({id:c.id,title:c.title,updated:c.updated,titled:c.titled,messages:c.messages.map(m=>({role:m.role,text:m.text,note:m.note,sources:m.sources,google:m.google,err:m.err,open:m.open,img:m.img,imgPrompt:m.imgPrompt,
     atts:(m.atts||[]).map(a=>({type:a.type,name:a.name,thumb:a.thumb,text:a.type==='file'?a.text:undefined}))}))}));
 }
 function persist(){
@@ -388,12 +433,14 @@ function addExtras(w,m){
     for(const x of m.sources){const a=mkEl('a');a.href=x.url;a.target='_blank';a.rel='noopener';a.textContent=x.host||x.title;s.appendChild(a);}
     w.appendChild(s);
   }
+  if(m.open){const a=mkEl('a','gbtn');a.href=m.open.href;a.textContent=m.open.label;if(!/^intent:/.test(m.open.href)){a.target='_blank';a.rel='noopener';}w.appendChild(a);}
   if(m.google){
     const a=mkEl('a','gbtn');a.href='https://www.google.com/search?q='+encodeURIComponent(m.google);a.target='_blank';a.rel='noopener';a.textContent='جستجو در گوگل';w.appendChild(a);
   }
+  if(m.note){const n=mkEl('div','note');n.textContent=m.note;w.appendChild(n);}
   if(m.err){const e=mkEl('div','errd');e.textContent=m.err;w.appendChild(e);}
   const acts=mkEl('div','acts');
-  acts.append(iconBtn('copy',()=>copyText(m.text),'کپی'),iconBtn('retry',()=>regen(m),'دوباره بساز'));
+  acts.append(iconBtn('copy',()=>copyText(m.text),'کپی'),iconBtn('speaker',()=>readAloud(m.text),'بخون'),iconBtn('retry',()=>regen(m),'دوباره بساز'));
   if(m.img||m.imgFull){const dl=iconBtn('download',()=>{const a=document.createElement('a');a.href=m.imgFull||m.img;a.download='jarvis.png';a.click();},'ذخیره');acts.appendChild(dl);}
   w.appendChild(acts);
 }
@@ -451,7 +498,7 @@ function typeOut(b,text){
 }
 async function sayAsst(text,opts={}){
   ensureChat();
-  const m={role:'assistant',text,sources:opts.sources||[],google:opts.google,err:opts.err};
+  const m={role:'assistant',text,sources:opts.sources||[],google:opts.google,err:opts.err,open:opts.open};
   cur.messages.push(m);
   const w=mkEl('div','msg asst'),b=mkEl('div','ab md');
   w.appendChild(b);log.appendChild(w);updateEmpty();
@@ -482,7 +529,7 @@ async function run(fn){
 /* ---------- مرحله‌های وضعیت ---------- */
 const active=new Set();
 function startStep(text){
-  const d=mkEl('div','step run','<span class="ic"><span class="dot"></span></span><span class="t"></span>');
+  const d=mkEl('div','step run','<span class="ic"><span class="orbit"><i></i><i></i><i></i></span></span><span class="t"></span>');
   d.querySelector('.t').textContent=text;log.appendChild(d);scrollDown();
   const CHECK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
   const CROSS='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -496,10 +543,23 @@ function startStep(text){
 }
 
 /* ---------- Groq ---------- */
+const M120='openai/gpt-oss-120b',M20='openai/gpt-oss-20b',Q36='qwen/qwen3.6-27b',Q38='qwen/qwen3.8-27b',GFLASH='gemini-2.5-flash';
+const GURL='https://api.groq.com/openai/v1/chat/completions';
+const BL=store.get('jv_block',{});
+function blockModel(m,secs,rate){BL[m]={until:Date.now()+secs*1000,rate:!!rate};store.set('jv_block',BL);}
+function blockInfo(m){const b=BL[m];if(!b||b.until<=Date.now())return null;return {wait:(b.until-Date.now())/1000,rate:b.rate};}
+function retrySecs(r,text){
+  const h=r&&r.headers&&r.headers.get('retry-after');if(h&&!isNaN(+h))return +h;
+  const d=/retryDelay"?:\s*"(\d+)/.exec(text||'');if(d)return +d[1];
+  const m=/try again in\s+(?:(\d+)h)?\s*(?:(\d+)m(?!s))?\s*(?:([\d.]+)s)?/i.exec(text||'');
+  if(m&&(m[1]||m[2]||m[3]))return (+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0);
+  return 60;
+}
+function httpErr(r,t){const e=new Error(r.status+' '+t.slice(0,240));e.status=r.status;e.retry=retrySecs(r,t);return e;}
+let lastFinish='';
 async function groqRaw(body,useSig=true){
-  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',signal:useSig?sig():undefined,
-    headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify(body)});
-  if(!r.ok){const e=new Error(r.status+' '+(await r.text()).slice(0,240));e.status=r.status;throw e;}
+  const r=await fetch(GURL,{method:'POST',signal:useSig?sig():undefined,headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify(body)});
+  if(!r.ok)throw httpErr(r,await r.text());
   return r.json();
 }
 async function groq(messages,opts={}){
@@ -512,12 +572,12 @@ async function groq(messages,opts={}){
   return stripThink(j.choices[0].message.content||'').trim();
 }
 async function groqStream(model,messages,opts,onDelta){
+  lastFinish='';
   const body={model,temperature:opts.temp??0.6,messages,stream:true};
   if(model.startsWith('openai/'))body.reasoning_effort=opts.effort||'medium';
   if(opts.max)body.max_completion_tokens=opts.max;
-  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',signal:sig(),
-    headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify(body)});
-  if(!r.ok){const e=new Error(r.status+' '+(await r.text()).slice(0,240));e.status=r.status;throw e;}
+  const r=await fetch(GURL,{method:'POST',signal:sig(),headers:{'Content-Type':'application/json',Authorization:'Bearer '+getKey()},body:JSON.stringify(body)});
+  if(!r.ok)throw httpErr(r,await r.text());
   const reader=r.body.getReader(),dec=new TextDecoder();
   let buf='',full='';
   while(true){
@@ -528,11 +588,66 @@ async function groqStream(model,messages,opts,onDelta){
       const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
       if(!line.startsWith('data:'))continue;
       const d=line.slice(5).trim();if(!d||d==='[DONE]')continue;
-      try{const c=JSON.parse(d).choices[0].delta.content;if(c){full+=c;onDelta(full);}}catch(e){}
+      try{const c=JSON.parse(d).choices[0];if(c.finish_reason)lastFinish=c.finish_reason;const t=c.delta&&c.delta.content;if(t){full+=t;onDelta(full);}}catch(e){}
     }
   }
   return full;
 }
+async function geminiText(list,{json=false,search=false,max=3000}={}){
+  const key=getGeminiKey();
+  let sys='';const contents=[];
+  for(const m of list){
+    if(m.role==='system'){sys+=(sys?'\n':'')+m.content;continue;}
+    const parts=typeof m.content==='string'?[{text:m.content}]:m.content.map(c=>{
+      if(c.type==='text')return {text:c.text};
+      const d=dataParts(c.image_url.url)||{mime:'image/jpeg',data:''};
+      return {inlineData:{mimeType:d.mime,data:d.data}};
+    });
+    contents.push({role:m.role==='assistant'?'model':'user',parts});
+  }
+  const body={contents,generationConfig:{maxOutputTokens:max}};
+  if(json||search===false)body.generationConfig.thinkingConfig={thinkingBudget:json?0:512};
+  if(sys)body.systemInstruction={parts:[{text:sys}]};
+  if(json)body.generationConfig.responseMimeType='application/json';
+  if(search)body.tools=[{google_search:{}}];
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+GFLASH+':generateContent?key='+key,{method:'POST',signal:sig(),headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok)throw httpErr(r,await r.text());
+  const j=await r.json();const c=j.candidates&&j.candidates[0];
+  const text=((c&&c.content&&c.content.parts)||[]).filter(p=>!p.thought).map(p=>p.text||'').join('').trim();
+  const sources=[],seen=new Set();
+  const gm=c&&c.groundingMetadata;
+  if(gm&&gm.groundingChunks)for(const g of gm.groundingChunks){
+    if(!g.web||!g.web.uri)continue;
+    const host=(g.web.title||'').replace(/^www\./,'')||'منبع';
+    if(seen.has(host))continue;seen.add(host);
+    sources.push({title:g.web.title||host,url:g.web.uri,host});
+    if(sources.length>=6)break;
+  }
+  return {text,sources};
+}
+/* زنجیره‌ی مدل‌ها: اگه سهمیه‌ی یکی پر شد، خودکار میره سراغ بعدی */
+async function runChain(chain,call){
+  let lastErr=null,minWait=Infinity;
+  for(const mm of chain){
+    if(mm.gem&&!getGeminiKey())continue;
+    const bi=blockInfo(mm.id);
+    if(bi){if(bi.rate)minWait=Math.min(minWait,bi.wait);continue;}
+    try{return await call(mm);}
+    catch(e){
+      if(e.name==='AbortError')throw e;
+      lastErr=e;
+      if(e.status===401)throw e;
+      if(e.status===429){const s=e.retry||60;blockModel(mm.id,s,true);minWait=Math.min(minWait,s);continue;}
+      if([400,403,404].includes(e.status)){blockModel(mm.id,300,false);continue;}
+      if(e.status===413||e.status>=500||e.soft)continue;
+      throw e;
+    }
+  }
+  if(minWait<Infinity){const e=new Error('all models are rate limited');e.status=429;e.retry=minWait;throw e;}
+  throw lastErr||new Error('no model available');
+}
+const estTok=list=>Math.ceil(list.reduce((n,m)=>n+(typeof m.content==='string'?m.content.length/2.6:m.content.reduce((k,c)=>k+(c.type==='text'?c.text.length/2.6:900),0)),0));
+function fitList(list){const lo=list[0]&&list[0].role==='system'?1:0;while(estTok(list)>4200&&list.length>lo+1)list.splice(lo,1);}
 
 /* ---------- پرامپت‌ها ---------- */
 function nowInfo(){
@@ -542,48 +657,46 @@ function nowInfo(){
     time:n.toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'}),
     tz:Intl.DateTimeFormat().resolvedOptions().timeZone};
 }
+const SYS_STATIC=`You are JARVIS 2.0 (جارویس), a Persian-first AI friend and assistant: thoughtful, curious, lightly funny, honest and warm, with the depth and care of Claude.
+Identity: if asked who made you or who you are, say you are JARVIS 2.0, that a person named Mehdi (مهدی) built you, and that your main brain is a language model from OpenAI (if asked for details: open models served on Groq, a Qwen model for images, Gemini for pictures and voice). Never claim to be human, Claude or ChatGPT.
+Language: reply in the language the user writes in (Persian by default, English if they write English). Understand Finglish, slang and typos.
+Tone (Persian): like a close, warm Iranian friend: informal natural Persian (تو، خودمونی), short natural sentences, never stiff or robotic. NEVER use customer-service phrases ("چه کاری از دستم برمیاد", "چطور می‌تونم کمکت کنم", "در خدمتم") and never end with a generic offer like "اگه سؤال دیگه‌ای داشتی بپرس". If the user only greets you, greet back naturally and ask how they are; do not ask what task you can do. React to what they say, show real interest, light humor when it fits, encourage without flattery, disagree kindly. If they sound stressed or sad, be a human first.
+Understanding: texts may contain typos or speech-recognition errors. Work out what they most likely meant from context and answer that; say what you understood if your reading differs; ask only when truly ambiguous.
+Style: answer directly first. 1 to 4 short sentences for casual or simple things; a fuller answer with short lists or bold only when the topic needs it. No emoji.
+Code: when asked to write, fix or explain code, give complete working code in fenced blocks with a language tag. For web pages, games, tools and demos write ONE self-contained HTML file (inline CSS and JS, no libraries or network) so the Run button can run it. One short sentence before the code, 1 to 3 after. Comments in Persian. Never leave code half-finished.
+Quality: think carefully; for math, logic, code and advice work it out step by step privately and give a correct, concrete answer. If unsure or the info may be outdated, say so instead of guessing.
+Purpose: you are the user's personal phone assistant. The app itself opens apps on the user's Android phone when asked (like "اینستا رو باز کن" or "open Telegram"). If an open-app request reaches you in chat, the app did not recognise that app name: say which name you did not recognise and that they can add it in Settings under «برنامه‌های من». For calls and messages say warmly that they arrive with the mobile app and give the closest help now.
+Abilities: the app searches the web when fresh info is needed, checks weather, knows date and time, accepts images, video (a few frames) and text files, creates and edits images (with the user's Gemini key), runs html/javascript code blocks with a Run button, and can read answers aloud. The app opens apps on the user's Android phone. You cannot call or read messages yet. Never pretend you did something you did not do.`;
 function sysChat(){
   const n=nowInfo();
   const who=settings.name?'\nThe user\'s name is '+settings.name+'. Use it now and then, naturally, not in every message.':'';
   const ins=settings.instructions.trim()?'\nThe user\'s own instructions about how you should talk and behave (follow them):\n'+settings.instructions.trim():'';
   const mem=memory.length?'\nThings you know about the user (use them naturally when they help, never recite them):\n'+memory.map(m=>'- '+m.text).join('\n'):'';
   const voice=voiceCtx?'\nThe user is talking to you by voice right now: keep the answer short (1 to 4 sentences), no lists, no code unless they ask.':'';
-  return `You are Jarvis 1.0 (جارویس), a Persian-first AI friend and assistant. You are thoughtful, curious, lightly funny, honest and warm: think of the smartest, kindest friend someone could have, with the depth and care of Claude.
-Identity: if someone asks who made you or who you are, say in Persian that you are Jarvis 1.0, that a person named Mehdi (مهدی) built you, and that your main brain is a language model from OpenAI (if they ask for details you can add that you use open models served on Groq, and a Qwen model for images). Never claim to be human and never claim to be Claude or ChatGPT.
-Now: ${n.fa} (${n.en}), ساعت ${n.time}, timezone ${n.tz}.
-Tone: talk like a close, warm Iranian friend: informal natural Persian (تو، خودمونی), short natural sentences, never stiff, formal or robotic. NEVER use customer-service phrases like "چه کاری از دستم برمیاد", "چطور می‌تونم کمکت کنم", "چی کار کنم برات", "در خدمتم", and never end a reply with a generic offer such as "اگه سؤال دیگه‌ای داشتی بپرس". If the user only greets you, greet back warmly and naturally (ask how they are, or comment on the time of day) and do not ask what task you can do. React to what they say, show real interest, use light humor when it fits, encourage without flattery, and disagree kindly when you think they are wrong. If they sound stressed or sad, be a human first and fix things second.
-Persian-first: understand Finglish (like "salam chetori"), slang and typos; use Iranian context (تومان، شمسی، تهران) when relevant; reply in the language the user writes in.
-Style: answer the question directly first. For casual or simple things use 1 to 4 short sentences. For topics that really need depth, write a fuller answer with short lists or bold. Never use emoji.
-Code: when asked to write, fix or explain code, put complete, working code in fenced code blocks with a language tag (html, javascript, python...). For web pages, games, tools and visual demos write ONE self-contained HTML file with inline CSS and JS and no external libraries or network requests, so the Run button in the chat can run it. Say in one short sentence what you are building before the code, and after the code explain in 1 to 3 sentences how to use it. Comments and explanations in Persian. Never leave code half-finished.
-Understanding: people type fast, make typos, write Finglish, or the text comes from speech recognition with wrong words. Always work out what they most likely meant from the context and the conversation, and answer that. If your reading differs from the literal text, say naturally what you understood; ask only when it is truly ambiguous.
-Purpose: you are the user's personal phone assistant in the making. When they ask you to open an app or call someone, say warmly that this part arrives with the mobile app, and give the closest useful help right now (a direct link, or the exact steps). Never just say you cannot.
-Quality: think carefully before answering. For math, logic, coding and advice work it out step by step privately and give a correct, concrete answer. If you are not sure or the information may be outdated, say so honestly instead of guessing. Ask one short clarifying question only when it is really needed.
-Abilities: the app searches the web for you when a question needs fresh information, checks the weather, knows the date and time, lets the user attach images, video (you see a few frames) and text files, creates and edits images when the user asks (with their Gemini key), and runs html/javascript code blocks with a Run button. You cannot open apps or make calls yet (that comes with the mobile app), and you cannot read messages or contacts. Never pretend to have done something you did not do.`+who+ins+mem+voice;
+  return SYS_STATIC+'\n\nNow: '+n.fa+' ('+n.en+'), '+n.time+', timezone '+n.tz+'.'+who+ins+mem+voice;
 }
-const SYS_INTENT=`You are the intent parser of a Persian assistant. The text may come from speech recognition and contain misheard words (for example "دلام" could be "سلام" or "دلار").
-Reply with JSON only: {"intent":"...","param":"...","options":[],"fixed":"","effort":"medium"}
-intent is one of: greet, dollar, date, time, weather, search, remember, image_edit, image_gen, ambiguous, chat, unknown.
-- greet: only a plain greeting (سلام). dollar: asks the dollar price. date: today's date. time: current time.
-- weather: param = city name in Persian or "" if none.
-- search: anything that needs fresh or looked-up information: news, scores, match schedules and results, prices, who currently holds a position, recent events, release dates, opening hours, "latest ...", "tomorrow's game". When in doubt about whether information could have changed, choose search. param = a clear self-contained Persian search query with names and context (use the recent conversation to complete follow-ups).
-- remember: the user asks you to remember something about them ("یادت باشه ...", "به خاطر بسپار ..."); param = the fact as a short Persian sentence.
-- image_edit: the user wants to change, edit or transform an existing image: add or remove a person or object, change background, clothes, colors, style, make it look like something. It applies to the attached image ("has_attachment" true) or the image just discussed or generated. param = a precise English instruction describing exactly the change.
-- image_gen: the user wants a NEW image created from a description (draw, make a picture, نقاشی کن، عکس بساز). param = a detailed, vivid English prompt.
-- If the user attached an image and only asks about it (what is this, read the text, describe), intent is chat.
-- If the text is close to two different commands and you cannot decide, intent="ambiguous" and options = the two intent codes (from greet, dollar, date, time).
-- If "pending_question_options" is given, the user is answering "did you mean X or Y?". Pick the matching intent from those options; if unclear, intent="unknown".
-- chat: everything else: small talk, questions about you, general knowledge, explanations, advice, math, writing and coding, jokes, opinions, normal conversation.
-- unknown only if the text is meaningless noise.
-- fixed: if the text has typos, spoken-language mistakes or likely speech-recognition errors, write the corrected Persian text (what the user most likely meant); otherwise "".
-- effort (only matters for chat): "low" for small talk and simple questions, "medium" for normal questions, "high" for hard math, logic, long code, deep analysis, planning or anything that needs careful reasoning.
-"recent" holds the last messages of the conversation.`;
+const SYS_INTENT=`Intent parser for a Persian/English assistant. Text may be Persian, English or Finglish and may contain typos or speech-recognition errors (e.g. "دلام" = "سلام" or "دلار").
+Reply with JSON only: {"intent":"","param":"","options":[],"fixed":"","effort":"medium"}
+intents: greet (plain greeting), dollar (dollar price), date, time, weather (param = city), search, remember, open_app, image_edit, image_gen, ambiguous, chat, unknown.
+- search: anything needing fresh or looked-up info: news, scores, match schedules/results, prices, who currently holds a position, recent events, release dates, opening hours, "latest", "tomorrow's game". If the information might have changed, choose search. param = clear self-contained query with names and context (complete follow-ups using "recent"), in the user's language.
+- remember: user asks you to remember a fact about them; param = short fact.
+- open_app: user wants to open an app on their phone ("اینستا رو باز کن", "open Telegram", "برو توی واتساپ"); param = the app name as the user said it.
+- image_edit: change/edit an existing image (add or remove a person/object, change background, clothes, colors, style) of the attached image (has_attachment) or the one just discussed. param = precise English instruction.
+- image_gen: create a NEW image from a description. param = detailed English prompt.
+- Attached image + a question about it (what is this, read it, describe) = chat.
+- ambiguous: close to two commands; options = two codes from greet, dollar, date, time. If pending_question_options is set, the user is answering "X or Y?": pick the matching intent, else unknown.
+- chat: everything else (small talk, questions about you, knowledge, explanations, advice, math, writing, code, opinions).
+- unknown: meaningless noise.
+- fixed: corrected text if there are typos or likely recognition errors, else "".
+- effort (chat only): low = small talk or simple, medium = normal, high = hard math, logic, long code, deep analysis.
+"recent" holds the last messages.`;
 
 /* ---------- دستورهای سریع ---------- */
 const SIMPLE={
-  greet:{label:'سلام',phrases:['سلام','درود','سلام جارویس']},
-  dollar:{label:'دلار',phrases:['دلار','قیمت دلار']},
-  date:{label:'تاریخ امروز',phrases:['امروز چندمه','امروز چندم','تاریخ امروز','امروز چندم ماهه']},
-  time:{label:'ساعت',phrases:['ساعت چنده','ساعت','الان ساعت چنده']}
+  greet:{label:'سلام',phrases:['سلام','درود','سلام جارویس','hi','hello','hey','hi jarvis','hello jarvis','hey jarvis']},
+  dollar:{label:'دلار',phrases:['دلار','قیمت دلار','dollar','dollar price']},
+  date:{label:'تاریخ امروز',phrases:['امروز چندمه','امروز چندم','تاریخ امروز','امروز چندم ماهه','what is the date','date today','what day is it']},
+  time:{label:'ساعت',phrases:['ساعت چنده','ساعت','الان ساعت چنده','what time is it','time']}
 };
 const LABEL={greet:'سلام',dollar:'دلار',date:'تاریخ امروز',time:'ساعت'};
 function fastLocal(raw){
@@ -594,11 +707,14 @@ function fastLocal(raw){
   return null;
 }
 const GREETS=['سلام! خوبی؟ چه خبر؟','به به، سلام! امروز چطوره؟','سلام سلام! خوش اومدی.','هی سلام! حالت چطوره؟'];
+const EN_GREETS=['Hey! How are you doing?','Hi there! How is your day going?','Hello! Good to see you.'];
+const isEn=s=>/^[\x00-\x7F\s]+$/.test(s)&&/[a-z]/i.test(s);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
 const ACTIONS={
-  greet(){return sayAsst(GREETS[Math.floor(Math.random()*GREETS.length)]);},
-  dollar(){return search('قیمت دلار امروز در بازار ایران','قیمت دلار امروز چنده؟');},
-  date(){const n=nowInfo();return sayAsst('امروز '+n.fa+' است. تاریخ میلادی: '+n.en+'.');},
-  time(){return sayAsst('الان ساعت '+nowInfo().time+' است.');}
+  greet(en){return sayAsst(pick(en?EN_GREETS:GREETS));},
+  dollar(en){return search(en?'US dollar price in Iran today':'قیمت دلار امروز در بازار ایران',en?'What is the dollar price today?':'قیمت دلار امروز چنده؟');},
+  date(en){const n=nowInfo();return sayAsst(en?'Today is '+n.en+'.':'امروز '+n.fa+' است. تاریخ میلادی: '+n.en+'.');},
+  time(en){const n=nowInfo();return sayAsst(en?'It is '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+' now.':'الان ساعت '+n.time+' است.');}
 };
 const CITIES={'تهران':'Tehran','مشهد':'Mashhad','اصفهان':'Isfahan','شیراز':'Shiraz','تبریز':'Tabriz','کرج':'Karaj','اهواز':'Ahvaz','قم':'Qom','رشت':'Rasht'};
 
@@ -636,58 +752,54 @@ function collectSources(msg){
 }
 async function webSearch(q,orig){
   const n=nowInfo();
-  const sys=`You are the web research engine of Jarvis, a Persian assistant. Today is ${n.en} (${n.fa}), the time is ${n.time} and the user's timezone is ${n.tz}. Resolve words like today, tomorrow and yesterday using this date.
+  const sys=`You are the web research engine of JARVIS, a Persian assistant. Today is ${n.en} (${n.fa}), the time is ${n.time} and the user's timezone is ${n.tz}. Resolve words like today, tomorrow and yesterday using this date.
 Search the web thoroughly: run more than one search when needed, in English and in Persian, open the best sources and cross-check them. Prefer official and recent sources. For sports fixtures give the competition, the date and kickoff time (converted to the user's timezone when you can, otherwise say which timezone), and the venue. For prices give the number, the unit and when it was published. If sources disagree or you cannot verify something, say so clearly instead of guessing.
-Answer in friendly, natural Persian, short and clear (2 to 6 sentences). Do not add citation marks or a source list (sources are shown separately).`;
+Answer in friendly, natural Persian (or English if the question is in English), short and clear (2 to 6 sentences). Do not add citation marks or a source list (sources are shown separately).`;
   const messages=[{role:'system',content:sys},{role:'user',content:(orig&&orig!==q)?orig+'\n(search query: '+q+')':q}];
-  const attempts=[
-    {label:'gpt-oss',model:MODEL,extra:{tools:[{type:'browser_search'}],tool_choice:'required',reasoning_effort:'medium'}},
-    {label:'compound',model:'groq/compound',extra:{}},
-    {label:'compound-mini',model:'groq/compound-mini',extra:{}}
-  ];
-  const errs=[];
-  for(const a of attempts){
-    try{
-      const j=await groqRaw(Object.assign({model:a.model,messages,temperature:0.3,max_completion_tokens:3000},a.extra));
-      chk();
-      const msg=j.choices[0].message;
-      const text=stripThink(msg.content||'').replace(/【[^】]*】/g,'').trim();
-      if(!text)throw new Error('empty answer');
-      return {text,sources:collectSources(msg)};
-    }catch(e){
-      if(e.name==='AbortError')throw e;
-      errs.push(a.label+': '+String(e.message).slice(0,140));
+  const chain=[{id:M120,t:'bs'},{id:M20,t:'bs'},{id:GFLASH,gem:true},{id:'groq/compound',t:'cp'},{id:'groq/compound-mini',t:'cp'}];
+  return runChain(chain,async mm=>{
+    if(mm.gem){
+      const r=await geminiText(messages,{search:true,max:2500});chk();
+      if(!r.text){const e=new Error('empty');e.soft=true;throw e;}
+      return r;
     }
-  }
-  throw new Error(errs.join(' | '));
+    const body={model:mm.id,messages,temperature:0.3,max_completion_tokens:1500};
+    if(mm.t==='bs'){body.tools=[{type:'browser_search'}];body.tool_choice='required';body.reasoning_effort='medium';}
+    const j=await groqRaw(body);chk();
+    const msg=j.choices[0].message;
+    const text=stripThink(msg.content||'').replace(/【[^】]*】/g,'').trim();
+    if(!text){const e=new Error('empty');e.soft=true;throw e;}
+    return {text,sources:collectSources(msg)};
+  });
 }
 async function search(q,orig){
   const s1=startStep('در حال جستجو در وب: «'+q+'»…');
   speak('یه لحظه، دارم توی اینترنت می‌گردم');
-  let out=null,err='';
-  try{out=await webSearch(q,orig);}catch(e){if(e.name==='AbortError')throw e;err=e.message;}
+  let out=null,err=null;
+  try{out=await webSearch(q,orig);}catch(e){if(e.name==='AbortError')throw e;err=e;}
   chk();
   if(out&&out.text){
     s1.done('جستجوی وب انجام شد'+(out.sources.length?' ('+out.sources.length+' منبع)':''));
     return sayAsst(out.text,{sources:out.sources});
   }
   s1.fail('جستجوی وب ناموفق بود');
-  return sayAsst('الان نتونستم از اینترنت جواب مطمئنی بگیرم، برای همین حدس نمی‌زنم. اگه دوست داری خودت توی گوگل ببینی، دکمه‌ی زیر رو بزن.',{google:q,err});
+  const quota=err&&err.status===429;
+  return sayAsst((quota?failText(err)+' ':'')+'نمی‌خوام حدس بزنم؛ اگه دوست داری خودت توی گوگل ببینی، دکمه‌ی زیر رو بزن.',{google:q,err:err?String(err.message).slice(0,200):''});
 }
 
 /* ---------- چت (استریم) ---------- */
 function buildApi(fixed){
-  const msgs=cur.messages.slice(-20);let vision=false;
+  const msgs=cur.messages.slice(-12);let vision=false;
   let sys=sysChat();
   if(fixed)sys+='\n\nNote: the last user message may contain typos or speech-recognition mistakes. Most likely intended meaning: "'+fixed+'". Answer that meaning; only if it is truly ambiguous, briefly say what you understood.';
   const list=[{role:'system',content:sys}];
   let lastImg=-1;
   msgs.forEach((m,i)=>{if(m.role==='user'&&i>=msgs.length-4&&(m.atts||[]).some(a=>a.full||a.frames))lastImg=i;});
   msgs.forEach((m,i)=>{
-    if(m.role==='assistant'){list.push({role:'assistant',content:m.text+(m.imgPrompt?' [عکسی که ساختی: '+m.imgPrompt+']':'')});return;}
+    if(m.role==='assistant'){const old=i<msgs.length-2&&m.text.length>1500;list.push({role:'assistant',content:(old?m.text.slice(0,1500)+'…':m.text)+(m.imgPrompt?' [عکسی که ساختی: '+m.imgPrompt+']':'')});return;}
     let text=m.text||'';const imgs=[];
     for(const a of (m.atts||[])){
-      if(a.type==='file')text+='\n\n[فایل پیوست: '+a.name+']\n```\n'+a.text+'\n```';
+      if(a.type==='file'){const cut=a.text.length>14000;text+='\n\n[فایل پیوست: '+a.name+(cut?' — فقط ابتدای فایل (۱۴ هزار کاراکتر) فرستاده شده':'')+']\n```\n'+a.text.slice(0,14000)+'\n```';}
       else if((a.full||a.frames)&&i===lastImg){
         imgs.push(...(a.frames||[a.full]));
         if(a.type==='video')text+='\n\n[ویدیوی پیوست: '+a.name+' — چند فریم از ویدیو ضمیمه شده]';
@@ -709,30 +821,41 @@ async function chat(msg,think,opts={}){
   const raw=msg.text||'';
   const fixed=opts.fixed&&norm(opts.fixed)!==norm(raw)?opts.fixed:'';
   const {list,vision}=buildApi(fixed);
-  const models=vision?VISION_MODELS:[MODEL];
   let effort=opts.effort||'medium';if(voiceCtx&&effort==='high')effort='medium';
-  let w=null,b=null,partial='',raf=false,fin=false;
+  fitList(list);
+  const est=estTok(list);
+  const want=effort==='low'?1500:effort==='high'?5500:4000;
+  const max=Math.max(700,Math.min(want,7600-est));
+  let chain=vision?[{id:Q36},{id:Q38},{id:GFLASH,gem:true}]
+    :effort==='low'?[{id:M20},{id:M120},{id:Q36},{id:GFLASH,gem:true}]
+    :[{id:M120},{id:Q38},{id:M20},{id:GFLASH,gem:true}];
+  if(est>5200&&getGeminiKey())chain=[{id:GFLASH,gem:true},...chain];
+  let w=null,b=null,partial='',raf=false,fin=false,blind='',served='';
   const mk=()=>{if(!w){if(think)think.remove();w=mkEl('div','msg asst');b=mkEl('div','ab md');w.appendChild(b);log.appendChild(w);}};
   const drop=()=>{if(w){w.remove();w=null;b=null;}partial='';};
+  const onDelta=t=>{partial=stripThink(t);if(!partial.trim())return;mk();
+    if(!raf){raf=true;requestAnimationFrame(()=>{raf=false;if(fin||!b)return;renderMD(b,partial,false);scrollDown();});}};
   try{
     let full='';
-    for(let k=0;k<models.length;k++){
-      const last=k===models.length-1;
-      try{
-        full=await groqStream(models[k],list,{temp:.6,effort,max:8000},t=>{
-          partial=stripThink(t);if(!partial.trim())return;mk();
-          if(!raf){raf=true;requestAnimationFrame(()=>{raf=false;if(fin||!b)return;renderMD(b,partial,false);scrollDown();});}
-        });
-        if(vision&&!last&&BLIND.test(stripThink(full))){drop();continue;}
-        break;
-      }catch(e){if(e.name==='AbortError'||last)throw e;drop();}
-    }
+    try{
+      full=await runChain(chain,async mm=>{
+        drop();let t;lastFinish='';served=mm.id;
+        if(mm.gem){t=(await geminiText(list,{max:4000})).text;if(t)onDelta(t);}
+        else t=await groqStream(mm.id,list,{temp:.6,effort,max},onDelta);
+        if(vision&&BLIND.test(stripThink(t))){blind=t;const e=new Error('blind');e.soft=true;throw e;}
+        return t;
+      });
+    }catch(e){if(blind&&e.name!=='AbortError')full=blind;else throw e;}
     chk();fin=true;
-    const reply=stripThink(full).trim()||'ببخشید، جوابی نداشتم. دوباره بپرس.';
+    let reply=stripThink(full).trim()||'ببخشید، جوابی نداشتم. دوباره بپرس.';
+    if(lastFinish==='length')reply+='\n\n(جواب بخاطر محدودیت طول نصفه موند؛ بگو «ادامه بده».)';
     mk();
-    const m={role:'assistant',text:reply,sources:[]};cur.messages.push(m);
+    const m={role:'assistant',text:reply,sources:[]};
+    if(effort!=='low'&&served===M20)m.note='سهمیه‌ی مدل قوی‌تر فعلاً پر بود؛ این جواب با مدل سبک‌تر داده شد.';
+    else if(served===GFLASH)m.note='سهمیه‌ی Groq پر بود؛ این جواب با Gemini داده شد.';
+    cur.messages.push(m);
     renderMD(b,reply,true);addExtras(w,m);scrollDown();persist();
-    speak(speakable(reply));afterAssistant();
+    speak(speakable(reply));
   }catch(e){
     fin=true;
     if(e.name==='AbortError'&&w&&partial.trim()){
@@ -741,6 +864,93 @@ async function chat(msg,think,opts={}){
     }else if(w)w.remove();
     throw e;
   }
+}
+
+/* ---------- باز کردن برنامه‌ها (اندروید) ---------- */
+const APPS=[
+  {names:['اینستاگرام','اینستا','instagram'],pkg:'com.instagram.android',web:'https://instagram.com'},
+  {names:['تلگرام','تلگرم','telegram'],pkg:'org.telegram.messenger',web:'https://web.telegram.org'},
+  {names:['واتساپ','واتس اپ','واتس آپ','whatsapp'],pkg:'com.whatsapp',web:'https://web.whatsapp.com'},
+  {names:['ایتا','eitaa'],pkg:'ir.eitaa.messenger',web:'https://web.eitaa.com'},
+  {names:['روبیکا','rubika'],pkg:'ir.resaneh1.iptv',web:'https://rubika.ir'},
+  {names:['بله','bale'],pkg:'ir.nasim',web:'https://web.bale.ai'},
+  {names:['یوتیوب','یوتوب','youtube'],pkg:'com.google.android.youtube',web:'https://youtube.com'},
+  {names:['یوتیوب موزیک','youtube music'],pkg:'com.google.android.apps.youtube.music',web:'https://music.youtube.com'},
+  {names:['اسپاتیفای','spotify'],pkg:'com.spotify.music',web:'https://open.spotify.com'},
+  {names:['نتفلیکس','netflix'],pkg:'com.netflix.mediaclient',web:'https://netflix.com'},
+  {names:['تیک تاک','تیکتاک','tiktok'],pkg:'com.zhiliaoapp.musically',web:'https://tiktok.com'},
+  {names:['اسنپ چت','snapchat'],pkg:'com.snapchat.android',web:'https://snapchat.com'},
+  {names:['توییتر','ایکس','تویتر','twitter'],pkg:'com.twitter.android',web:'https://x.com'},
+  {names:['فیسبوک','فیس بوک','facebook'],pkg:'com.facebook.katana',web:'https://facebook.com'},
+  {names:['مسنجر','messenger'],pkg:'com.facebook.orca',web:'https://messenger.com'},
+  {names:['لینکدین','linkedin'],pkg:'com.linkedin.android',web:'https://linkedin.com'},
+  {names:['دیسکورد','discord'],pkg:'com.discord',web:'https://discord.com/app'},
+  {names:['ردیت','reddit'],pkg:'com.reddit.frontpage',web:'https://reddit.com'},
+  {names:['پینترست','pinterest'],pkg:'com.pinterest',web:'https://pinterest.com'},
+  {names:['گوگل','google'],pkg:'com.google.android.googlequicksearchbox',web:'https://google.com'},
+  {names:['کروم','chrome'],pkg:'com.android.chrome',web:'https://google.com'},
+  {names:['نقشه','گوگل مپ','مپ','نقشه گوگل','google maps','maps'],pkg:'com.google.android.apps.maps',web:'https://maps.google.com'},
+  {names:['جیمیل','gmail'],pkg:'com.google.android.gm',web:'https://mail.google.com'},
+  {names:['گوگل درایو','درایو','drive'],pkg:'com.google.android.apps.docs',web:'https://drive.google.com'},
+  {names:['گوگل فوتوز','فوتوز','photos'],pkg:'com.google.android.apps.photos',web:'https://photos.google.com'},
+  {names:['تقویم','calendar'],pkg:'com.google.android.calendar',web:'https://calendar.google.com'},
+  {names:['پلی استور','گوگل پلی','play store'],pkg:'com.android.vending',web:'https://play.google.com'},
+  {names:['گیت هاب','گیتهاب','github'],pkg:'com.github.android',web:'https://github.com'},
+  {names:['بازار','کافه بازار','bazaar'],pkg:'com.farsitel.bazaar',web:'https://cafebazaar.ir'},
+  {names:['دیوار','divar'],pkg:'ir.divar',web:'https://divar.ir'},
+  {names:['دیجی کالا','دیجیکالا','digikala'],pkg:'com.digikala',web:'https://digikala.com'},
+  {names:['ترب','torob'],pkg:'com.torob',web:'https://torob.com'},
+  {names:['اسنپ','snapp'],pkg:'cab.snapp.passenger',web:'https://app.snapp.taxi'},
+  {names:['تپسی','tapsi'],pkg:'taxi.tap30.passenger',web:'https://tapsi.ir'},
+  {names:['آپارات','اپارات','aparat'],pkg:'',web:'https://aparat.com'},
+  {names:['دوربین','camera'],action:'android.media.action.STILL_IMAGE_CAMERA',web:''},
+  {names:['تنظیمات گوشی','تنظیمات','settings'],action:'android.settings.SETTINGS',web:''}
+];
+let customApps=store.get('jv_apps',[]);
+const allApps=()=>APPS.concat(customApps.map(a=>({names:[a.name],pkg:a.pkg,web:'',custom:true})));
+const isAndroid=()=>/Android/i.test(navigator.userAgent);
+const squash=t=>norm(t).replace(/\s/g,'');
+function findApp(name){
+  const n=squash(name);if(!n)return null;
+  let best=null,bs=0;
+  for(const a of allApps())for(const k of a.names){
+    const kk=squash(k);
+    const sc=kk===n?1:sim(n,kk);
+    if(sc>bs){bs=sc;best=a;}
+  }
+  return bs>=0.78?best:null;
+}
+const OPEN_VERB=/(^|\s)(باز|بازکن|بازش|اجرا|اجرای|open|launch|start|run)(\s|$)/i;
+const OPEN_STOP=new Set(['رو','را','لطفا','برام','یه','یک','کن','باز','بازکن','بازش','اجرا','اجرای','برنامه','اپ','اپلیکیشن','app','open','launch','start','run','please','the','my','برو','توی','تو','به','جارویس','jarvis','hey','هی','کن','و','من','ی']);
+function localOpen(raw){
+  const t=norm(raw);
+  if(!OPEN_VERB.test(t))return null;
+  const w=t.split(' ').filter(x=>x&&!OPEN_STOP.has(x));
+  if(!w.length||w.length>4)return null;
+  const whole=findApp(w.join(' '));if(whole)return whole;
+  for(let len=Math.min(3,w.length);len>=1;len--)for(let i=0;i+len<=w.length;i++){const a=findApp(w.slice(i,i+len).join(' '));if(a)return a;}
+  return null;
+}
+function appHref(app){
+  if(isAndroid()&&(app.pkg||app.action)){
+    const fb=app.web?';S.browser_fallback_url='+encodeURIComponent(app.web):'';
+    return app.action?'intent:#Intent;action='+app.action+fb+';end'
+      :'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package='+app.pkg+fb+';end';
+  }
+  return app.web||'';
+}
+async function launchApp(app,en){
+  const fa=app.names[0],enName=app.names.find(n=>/^[a-z]/i.test(n))||fa;
+  const href=appHref(app);
+  if(!href)return sayAsst(en?'I can only open "'+enName+'" on an Android phone.':'«'+fa+'» رو فقط روی گوشی اندروید می‌تونم باز کنم.');
+  await sayAsst(en?'Opening '+enName+'. If it does not open by itself, tap the button below.':fa+' رو باز می‌کنم. اگه خودش باز نشد، دکمه‌ی زیر رو بزن.',{open:{label:en?'Open '+enName:'باز کردن '+fa,href}});
+  if(isAndroid())location.href=href;else window.open(href,'_blank');
+}
+async function openApp(name,raw){
+  const en=isEn(raw||name||'');
+  const app=findApp(name)||localOpen(name);
+  if(!app)return sayAsst(en?'I could not find that app in my list. Add it in Settings under "My apps" with its package name and I will open it.':'این برنامه رو توی لیستم پیدا نکردم. از تنظیمات، بخش «برنامه‌های من»، اسمش و اسم بسته‌اش رو اضافه کن تا بتونم باز کنم.');
+  return launchApp(app,en);
 }
 
 /* ---------- ساخت و ادیت عکس (Gemini) ---------- */
@@ -815,12 +1025,21 @@ async function imageTask(kind,prompt,msg){
 
 /* ---------- پردازش پیام ---------- */
 function parseIntent(s){try{return JSON.parse(s);}catch(e){return {intent:'chat'};}}
+function waitText(s){s=Math.ceil(s);if(s<90)return 'حدود '+s+' ثانیه';if(s<5400)return 'حدود '+Math.ceil(s/60)+' دقیقه';return 'حدود '+Math.ceil(s/3600)+' ساعت';}
 function failText(e){
   const s=e.status;
-  if(s===401)return 'کلید Groq درست نیست یا منقضی شده. از تنظیمات یه کلید جدید بذار.';
-  if(s===429)return 'سهمیه‌ی رایگان Groq فعلاً پر شده یا زیادی سریع رفتیم. چند دقیقه دیگه دوباره امتحان کن.';
-  if(s>=500)return 'سرور Groq الان مشکل داره. یه کم دیگه دوباره بفرست.';
+  if(s===401)return 'کلید درست نیست یا منقضی شده. از دکمه‌ی کلید، یه کلید جدید بذار.';
+  if(s===429)return 'سهمیه‌ی رایگان همه‌ی مدل‌ها فعلاً پر شده؛ '+waitText(e.retry||60)+' دیگه دوباره باز میشه.'+(getGeminiKey()?'':' اگه کلید Gemini هم اضافه کنی، سهمیه‌ی جدا و بیشتری داری.');
+  if(s===413)return 'این گفتگو یا فایل برای سهمیه‌ی دقیقه‌ای رایگان زیادی بزرگه. یه گفتگوی جدید شروع کن یا فایل کوچیک‌تری بفرست.';
+  if(s>=500)return 'سرور الان مشکل داره. یه کم دیگه دوباره بفرست.';
   return 'نتونستم به مغزم وصل بشم. اینترنت و VPN رو چک کن و دوباره بفرست.';
+}
+async function classify(payload){
+  const messages=[{role:'system',content:SYS_INTENT},{role:'user',content:JSON.stringify(payload)}];
+  return runChain([{id:M20},{id:M120},{id:GFLASH,gem:true}],async mm=>{
+    if(mm.gem)return (await geminiText(messages,{json:true,max:500})).text;
+    return groq(messages,{model:mm.id,json:true,max:500});
+  });
 }
 async function process(msg){
   if(!getKey()){if(SHOW_KEY_BUTTON)openKeySheet();return sayAsst('برای شروع، کلید Groq رو با دکمه‌ی کلید بالای صفحه وارد کن تا بتونیم حرف بزنیم.');}
@@ -829,19 +1048,20 @@ async function process(msg){
     const raw=msg.text||'',atts=msg.atts||[];
     const hasMedia=atts.some(a=>a.type==='image'||a.type==='video');
     if(atts.length&&!(hasMedia&&raw))return await chat(msg,think,{});
-    if(!askedOptions&&!atts.length){const k=fastLocal(raw);if(k){think.remove();return await ACTIONS[k]();}}
+    if(!askedOptions&&!atts.length){const k=fastLocal(raw);if(k){think.remove();return await ACTIONS[k](isEn(raw));}}
+    if(!askedOptions&&!atts.length){const ap=localOpen(raw);if(ap){think.remove();return await launchApp(ap,isEn(raw));}}
     const recent=cur.messages.slice(-5,-1).map(m=>({role:m.role,text:(m.text||'').slice(0,300)}));
-    const res=parseIntent(await groq([{role:'system',content:SYS_INTENT},{role:'user',content:JSON.stringify({text:raw,pending_question_options:askedOptions,recent,has_attachment:hasMedia})}],{json:true,max:900}));
+    const res=parseIntent(await classify({text:raw,pending_question_options:askedOptions,recent,has_attachment:hasMedia}));
     chk();
     askedOptions=null;
     const p=(res.param||'').trim();
     const o={fixed:(res.fixed||'').trim(),effort:['low','medium','high'].includes(res.effort)?res.effort:'medium'};
     if(res.intent!=='chat')think.remove();
     switch(res.intent){
-      case 'greet':case 'date':case 'time':return await ACTIONS[res.intent]();
-      case 'dollar':return await ACTIONS.dollar();
+      case 'greet':case 'date':case 'time':case 'dollar':return await ACTIONS[res.intent](isEn(raw));
       case 'weather':return await weather(p);
       case 'search':return await search(p||raw,raw);
+      case 'open_app':return await openApp(p||raw,raw);
       case 'image_edit':return await imageTask('edit',p||raw,msg);
       case 'image_gen':return await imageTask('gen',p||raw,msg);
       case 'remember':
@@ -868,14 +1088,7 @@ function submitMsg(msg){
   log.appendChild(userEl(msg));updateEmpty();scrollDown();persist();
   return run(()=>process(msg));
 }
-function afterAssistant(){
-  if(!cur||cur.titled||cur.messages.length<2)return;
-  cur.titled=true;
-  const c=cur,first=(c.messages.find(m=>m.role==='user')||{}).text||'';
-  if(!first||!getKey())return;
-  groq([{role:'system',content:'Write a very short Persian title (2 to 5 words) for this conversation. Reply with the title only, no quotes, no punctuation at the end.'},{role:'user',content:first.slice(0,300)}],{noAbort:true,max:300,temp:.3})
-    .then(t=>{t=t.replace(/["«»“”.]/g,'').trim();if(t){c.title=t.slice(0,40);persist();if(cur===c)$('ttl').textContent=c.title;}}).catch(()=>{});
-}
+function afterAssistant(){}
 
 /* ---------- تاریخچه (سایدبار) ---------- */
 function renderHist(){
@@ -907,31 +1120,51 @@ function openSettings(){
   $('sheet').innerHTML=`<div class="sht"><b>تنظیمات</b><button class="ib" id="sClose">${ic('x')}</button></div>
   <label class="fl">اسمت چیه؟<input id="sName" value="${esc(s.name)}" placeholder="مثلاً مهدی"></label>
   <label class="fl">دوست داری چطور باهات حرف بزنم؟<textarea id="sInst" rows="3" placeholder="مثلاً: خیلی خودمونی باش، کوتاه جواب بده، شوخی هم بکن">${esc(s.instructions)}</textarea></label>
-  <label class="fl">ظاهر<select id="sTheme"><option value="auto">خودکار</option><option value="light">روشن</option><option value="dark">تیره</option></select></label>
+  <label class="fl">ظاهر<select id="sTheme"><option value="dark">مشکی (آینده‌نگر)</option><option value="light">روشن</option></select></label>
   <div class="sec">صدا</div>
+  <label class="fl">زبان صحبت کردن تو<select id="sLang"><option value="auto">خودکار (فارسی یا انگلیسی)</option><option value="fa">فقط فارسی</option><option value="en">فقط انگلیسی</option></select></label>
+  <label class="fl">صدای جارویس (نیاز به کلید Gemini)<select id="sVName">${VOICES.map(v=>`<option value="${v[0]}">${v[0]} — ${v[1]}</option>`).join('')}</select></label>
   <label class="chk"><input type="checkbox" id="sVoice"> توی حالت صوتی جواب‌ها رو بلند بخونه</label>
+  <label class="chk"><input type="checkbox" id="sAll"> همه‌ی جواب‌ها رو (توی چت معمولی هم) بلند بخونه</label>
   <label class="fl">سرعت حرف زدن<input type="range" id="sSpeed" min="0.7" max="1.4" step="0.05"></label>
+  <div class="row"><button id="sTest" class="btn">امتحان صدا</button></div>
+  <div class="vstat" id="vtest"></div>
   <label class="chk"><input type="checkbox" id="sWake"> با گفتن «هی جارویس» بیدار شه (صفحه باید باز باشه)</label>
+  <div class="sec">برنامه‌های من</div>
+  <div id="appList"></div>
+  <div class="row"><input id="appName" placeholder="اسم برنامه"><input id="appPkg" dir="ltr" placeholder="com.example.app"><button id="appAdd" class="btn">اضافه</button></div>
   <div class="sec">حافظه</div>
   <div id="memList"></div>
   <div class="row"><input id="memNew" placeholder="چیزی که می‌خوای یادش بمونه…"><button id="memAdd" class="btn">اضافه</button></div>
   ${SHOW_KEY_BUTTON?`<div class="sec">کلیدها</div><button id="sKeys" class="btn" style="align-self:flex-start">مدیریت کلیدها</button>`:''}
   <div class="sec">داده‌ها</div>
   <button id="sClear" class="btn danger">پاک کردن همه‌ی گفتگوها</button>`;
-  $('sTheme').value=s.theme;$('sVoice').checked=s.voiceReplies;$('sSpeed').value=s.speed;$('sWake').checked=s.wake;
+  $('sTheme').value=s.theme;$('sLang').value=s.speechLang;$('sVName').value=s.voiceName;
+  $('sVoice').checked=s.voiceReplies;$('sAll').checked=s.readAll;$('sSpeed').value=s.speed;$('sWake').checked=s.wake;
   const memRender=()=>{
     const l=$('memList');l.textContent='';
     if(!memory.length){const e=mkEl('div','mi');e.style.color='var(--mute)';e.textContent='فعلاً چیزی یادم نیست. بگو «یادت باشه ...» تا ثبت کنم.';l.appendChild(e);}
     for(const m of memory){const d=mkEl('div','mi'),sp=mkEl('span');sp.textContent=m.text;d.appendChild(sp);d.appendChild(iconBtn('trash',()=>{memory=memory.filter(x=>x!==m);store.set('jv_memory',memory);memRender();}));l.appendChild(d);}
   };
   memRender();
+  const appRender=()=>{
+    const l=$('appList');l.textContent='';
+    const e=mkEl('div','mi');e.style.color='var(--mute)';e.textContent='برنامه‌های معروف از قبل هستن. اگه برنامه‌ای رو نشناخت، اسمش و اسم بسته‌اش (بعد از id= توی آدرس صفحه‌ی گوگل‌پلی) رو اینجا اضافه کن.';l.appendChild(e);
+    for(const a of customApps){const d=mkEl('div','mi'),sp=mkEl('span');sp.textContent=a.name+' — '+a.pkg;d.appendChild(sp);d.appendChild(iconBtn('trash',()=>{customApps=customApps.filter(x=>x!==a);store.set('jv_apps',customApps);appRender();}));l.appendChild(d);}
+  };
+  appRender();
+  $('appAdd').onclick=()=>{const n=$('appName').value.trim(),k=$('appPkg').value.trim();if(!n||!/^[A-Za-z][\w]*(\.[\w]+)+$/.test(k))return toast('اسم و اسم بسته (مثل com.example.app) رو درست بنویس');customApps.push({id:uid(),name:n,pkg:k});store.set('jv_apps',customApps);$('appName').value='';$('appPkg').value='';appRender();};
   $('sClose').onclick=()=>$('modal').classList.remove('show');
   $('sName').oninput=e=>{s.name=e.target.value.trim();saveSettings();updateRows();$('greet').textContent=greeting();};
   $('sInst').oninput=e=>{s.instructions=e.target.value;saveSettings();};
   $('sTheme').onchange=e=>{s.theme=e.target.value;saveSettings();applyTheme();};
+  $('sLang').onchange=e=>{s.speechLang=e.target.value;saveSettings();if(wakeRec){wakeSync();}};
+  $('sVName').onchange=e=>{s.voiceName=e.target.value;saveSettings();};
   $('sVoice').onchange=e=>{s.voiceReplies=e.target.checked;saveSettings();};
+  $('sAll').onchange=e=>{s.readAll=e.target.checked;saveSettings();};
   $('sSpeed').oninput=e=>{s.speed=parseFloat(e.target.value);saveSettings();};
   $('sWake').onchange=e=>{s.wake=e.target.checked;saveSettings();wakeSync();};
+  $('sTest').onclick=testVoice;
   $('memAdd').onclick=()=>{const v=$('memNew').value.trim();if(!v)return;memory.push({id:uid(),text:v});store.set('jv_memory',memory);$('memNew').value='';memRender();};
   if(SHOW_KEY_BUTTON)$('sKeys').onclick=openKeySheet;
   $('sClear').onclick=()=>{if(confirm('همه‌ی گفتگوها برای همیشه پاک بشن؟')){chats=[];store.set('jv_chats',[]);newChat();$('modal').classList.remove('show');}};
@@ -1059,9 +1292,10 @@ async function recordAudio({max=15000,silence=1400,noSpeech=7000,onLevel}={}){
 }
 async function whisper(blob){
   const fd=new FormData();
-  fd.append('file',blob,'voice.webm');fd.append('model','whisper-large-v3');fd.append('language','fa');fd.append('temperature','0');
+  fd.append('file',blob,'voice.webm');fd.append('model','whisper-large-v3');fd.append('temperature','0');
+  if(settings.speechLang!=='auto')fd.append('language',settings.speechLang);
   const la=cur&&[...cur.messages].reverse().find(m=>m.role==='assistant');
-  fd.append('prompt','گفتگوی فارسی با جارویس. '+(la?la.text.replace(/\s+/g,' ').slice(0,140):''));
+  fd.append('prompt',(settings.speechLang==='fa'?'گفتگوی فارسی با جارویس. ':'')+(la?la.text.replace(/\s+/g,' ').slice(0,140):''));
   const r=await fetch('https://api.groq.com/openai/v1/audio/transcriptions',{method:'POST',signal:sig(),headers:{Authorization:'Bearer '+getKey()},body:fd});
   if(!r.ok)throw new Error('whisper '+r.status);
   const t=(await r.json()).text.trim();
@@ -1069,35 +1303,40 @@ async function whisper(blob){
   return t;
 }
 
-/* ---------- صدا: خوندن جواب‌ها (Gemini برای فارسی، یا صدای خود گوشی) ---------- */
-let voiceCtx=false,ttsVoice=null,ttsQ=[],ttsBusy=false,ttsEpoch=0,audioCtx=null,curSrc=null,noVoiceWarned=false;
+/* ---------- صدا: خوندن جواب‌ها (Gemini، صدای مردانه‌ی فارسی؛ یا صدای خود گوشی) ---------- */
+let voiceCtx=false,ttsVoice=null,ttsQ=[],ttsBusy=false,ttsEpoch=0,audioCtx=null,curSrc=null,noVoiceWarned=false,ttsErr='';
 function pickVoice(){try{ttsVoice=speechSynthesis.getVoices().find(v=>/^fa/i.test(v.lang))||null;}catch(e){}}
 if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}
 function unlockAudio(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();}catch(e){}}
+document.addEventListener('pointerdown',unlockAudio,{once:true});
 function chunkText(t){
   const parts=[];let cur='';
   for(const s of t.split(/(?<=[.!؟?\n])\s*/)){if(!s)continue;if(cur&&(cur+s).length>300){parts.push(cur);cur=s;}else cur+=(cur?' ':'')+s;}
   if(cur)parts.push(cur);return parts;
 }
-function speak(t){
-  if(!voiceCtx||!settings.voiceReplies||!t)return;
+function speakNow(t){
+  if(!t)return;
   if(vActive)$('vcap').textContent=t.slice(0,220);
   ttsQ.push(...chunkText(t));pump();
 }
+function speak(t){if(!t)return;if((voiceCtx&&settings.voiceReplies)||settings.readAll)speakNow(t);}
+function readAloud(text){stopSpeech();unlockAudio();speakNow(speakable(text));}
 function b64Bytes(b){const bin=atob(b),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u;}
 async function geminiTTS(text){
-  const key=getGeminiKey();if(!key)return null;
+  const key=getGeminiKey();if(!key){ttsErr='کلید Gemini وارد نشده';return null;}
+  ttsErr='';
   for(const model of ['gemini-2.5-flash-preview-tts','gemini-3.1-flash-tts-preview']){
     try{
       const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({contents:[{parts:[{text:'Say in a warm, friendly, natural Persian voice: '+text}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:GEMINI_VOICE}}}}})});
-      if(!r.ok)continue;
+        body:JSON.stringify({contents:[{parts:[{text:'Say this naturally in a calm, confident, warm male voice. Use native, standard pronunciation of the text\'s language (for Persian: clear standard Tehrani Persian, no foreign accent): '+text}]}],
+          generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:settings.voiceName||'Charon'}}}}})});
+      if(!r.ok){ttsErr=model+': '+r.status+' '+(await r.text()).replace(/\s+/g,' ').slice(0,140);continue;}
       const j=await r.json();
       const ps=(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
-      const p=ps.find(x=>x.inlineData||x.inline_data);if(!p)continue;
+      const p=ps.find(x=>x.inlineData||x.inline_data);if(!p){ttsErr=model+': no audio';continue;}
       const d=p.inlineData||p.inline_data;
       return {pcm:b64Bytes(d.data),rate:+((/rate=(\d+)/.exec(d.mimeType||d.mime_type||'')||[])[1]||24000)};
-    }catch(e){}
+    }catch(e){ttsErr=model+': '+e.message;}
   }
   return null;
 }
@@ -1109,13 +1348,13 @@ function playPCM(a){
       for(let i=0;i<n;i++)ch[i]=dv.getInt16(i*2,true)/32768;
       const src=audioCtx.createBufferSource();src.buffer=buf;src.playbackRate.value=settings.speed;src.connect(audioCtx.destination);
       curSrc=src;src.onended=()=>res();src.start();
-    }catch(e){res();}
+    }catch(e){ttsErr='پخش صدا: '+e.message;res();}
   });
 }
 function playBrowser(t){
   return new Promise(res=>{
     if(!ttsVoice){
-      if(!noVoiceWarned){noVoiceWarned=true;toast(getGeminiKey()?'صدای Gemini جواب نداد؛ متن جواب رو می‌نویسم':'گوشیت صدای فارسی نداره؛ برای صدای فارسی کلید Gemini رو از دکمه‌ی کلید اضافه کن');}
+      if(!noVoiceWarned){noVoiceWarned=true;toast(getGeminiKey()?'صدای Gemini جواب نداد ('+(ttsErr||'؟')+')؛ فقط متن رو می‌نویسم':'برای صدای فارسی، کلید Gemini رو از دکمه‌ی کلید اضافه کن');}
       return res();
     }
     const u=new SpeechSynthesisUtterance(t);u.voice=ttsVoice;u.lang=ttsVoice.lang;u.rate=settings.speed;
@@ -1133,7 +1372,7 @@ async function pump(){
     if(ep!==ttsEpoch)break;
     if(ttsQ.length)cache=prep(ttsQ[0]);
     if(vActive)setVoiceUI('speak');
-    if(a)await playPCM(a);else await playBrowser(t);
+    if(a){noVoiceWarned=false;await playPCM(a);}else await playBrowser(t);
   }
   if(ep===ttsEpoch)ttsBusy=false;
 }
@@ -1143,6 +1382,14 @@ function stopSpeech(){
   if(curSrc){try{curSrc.onended=null;curSrc.stop();}catch(e){}curSrc=null;}
 }
 function waitSpeech(){return new Promise(r=>{const iv=setInterval(()=>{if(!ttsBusy&&!ttsQ.length){clearInterval(iv);r();}},120);});}
+async function testVoice(){
+  const st=$('vtest');stopSpeech();unlockAudio();
+  if(!getGeminiKey()){st.textContent='کلید Gemini وارد نشده؛ از «مدیریت کلیدها» اضافه‌ش کن.';return;}
+  st.textContent='در حال گرفتن صدا…';
+  const a=await geminiTTS('سلام، من جارویس هستم. این صدای منه؛ خوبه؟');
+  if(!a){st.textContent='صدا نیومد: '+ttsErr;return;}
+  st.textContent='پخش شد ✓';await playPCM(a);
+}
 
 /* ---------- حالت صوتی (مثل کلود) ---------- */
 let vActive=false;
@@ -1151,7 +1398,7 @@ function startVoice(){
   if(!getKey()){if(SHOW_KEY_BUTTON)openKeySheet();return;}
   if(vActive)return;
   unlockAudio();
-  if(!ttsVoice&&!getGeminiKey()&&!noVoiceWarned){noVoiceWarned=true;toast('گوشیت صدای فارسی نداره؛ جواب‌ها رو می‌نویسم. برای صدای فارسی، کلید Gemini رو از دکمه‌ی کلید اضافه کن');}
+  if(!ttsVoice&&!getGeminiKey()&&!noVoiceWarned){noVoiceWarned=true;toast('برای صدای فارسی، کلید Gemini رو از دکمه‌ی کلید اضافه کن؛ فعلاً جواب‌ها نوشته میشن');}
   vActive=true;wakeSync();setVoiceUI('listen','');voiceLoop();
 }
 function endVoice(){
@@ -1204,12 +1451,13 @@ function findWake(t){const tk=norm(t).split(' ').filter(Boolean);const i=tk.find
 function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.value=.15;o.connect(g);g.connect(c.destination);o.start();setTimeout(()=>{o.stop();c.close();},130);}catch(e){}}
 function wakeSync(){
   const on=settings.wake&&!vActive&&!!SR;
+  if(wakeRec&&wakeRec._lang!==settings.speechLang){try{wakeRec.onend=null;wakeRec.stop();}catch(e){}wakeRec=null;}
   $('wakeInd').hidden=!on;
   if(on&&!wakeRec&&!wakeBusy)wakeStart();
   if(!on&&wakeRec){try{wakeRec.onend=null;wakeRec.stop();}catch(e){}wakeRec=null;}
 }
 function wakeStart(){
-  wakeRec=new SR();wakeRec.lang='fa-IR';wakeRec.continuous=true;wakeRec.interimResults=false;
+  wakeRec=new SR();wakeRec.lang=settings.speechLang==='en'?'en-US':'fa-IR';wakeRec.continuous=true;wakeRec.interimResults=false;
   wakeRec.onresult=e=>{
     for(let i=e.resultIndex;i<e.results.length;i++){
       if(!e.results[i].isFinal)continue;
@@ -1219,7 +1467,7 @@ function wakeStart(){
   };
   wakeRec.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){settings.wake=false;saveSettings();wakeRec=null;wakeSync();toast('دسترسی میکروفون داده نشد');}};
   wakeRec.onend=()=>{if(settings.wake&&!vActive&&!wakeBusy&&wakeRec)setTimeout(()=>{if(settings.wake&&!vActive&&!wakeBusy){try{wakeRec.start();}catch(e){}}},300);};
-  try{wakeRec.start();}catch(e){}
+  wakeRec._lang=settings.speechLang;try{wakeRec.start();}catch(e){}
 }
 async function onWake(rest){
   if(wakeBusy||running||vActive)return;
@@ -1239,10 +1487,4 @@ $('newChat').onclick=newChat;$('topNew').onclick=newChat;
 if(SHOW_KEY_BUTTON)$('keyTop').onclick=openKeySheet;else $('keyTop').style.display='none';
 $('menuBtn').onclick=openMenu;$('sideClose').onclick=closeMenu;$('scrim').onclick=closeMenu;
 $('profile').onclick=openSettings;
-$('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modal').classList.remove('show');});
-$('hsearch').addEventListener('input',renderHist);
-applyTheme();newChat();wakeSync();
-</script>
-</body>
-</html>
-
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modal').classList.remove('sh
