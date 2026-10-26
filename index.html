@@ -1487,4 +1487,9 @@ $('newChat').onclick=newChat;$('topNew').onclick=newChat;
 if(SHOW_KEY_BUTTON)$('keyTop').onclick=openKeySheet;else $('keyTop').style.display='none';
 $('menuBtn').onclick=openMenu;$('sideClose').onclick=closeMenu;$('scrim').onclick=closeMenu;
 $('profile').onclick=openSettings;
-$('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modal').classList.remove('sh
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))$('modal').classList.remove('show');});
+$('hsearch').addEventListener('input',renderHist);
+applyTheme();newChat();wakeSync();
+</script>
+</body>
+</html>
